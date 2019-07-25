@@ -1,0 +1,57 @@
+package com.ericsson.alodiga.model;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.NamedQueries; 
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;   
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name = "Aplicacion")  
+@XmlAccessorType(XmlAccessType.FIELD) 
+@Entity
+@Table(name = "aplicacion")
+@NamedQueries({
+		@NamedQuery(name = "Aplicacion.findAll", query = "SELECT a FROM Aplicacion a"),
+		@NamedQuery(name = "Aplicacion.findByAplicacionId", query = "SELECT a FROM Aplicacion a where a.aplicacionId=:aplicacionId"),
+		@NamedQuery(name = "Aplicacion.findByNombre", query = "SELECT a FROM Aplicacion a where a.nombre=:nombre") })
+public class Aplicacion implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@XmlElement(name = "aplicacionId")
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(unique = true, nullable = false)
+	private int aplicacionId;
+
+	@Column(nullable = false, length = 45)
+	@XmlElement(name = "nombre")
+	private String nombre;
+
+	public Aplicacion() {
+	}
+
+	public int getAplicacionId() {
+		return this.aplicacionId;
+	}
+
+	public void setAplicacionId(int aplicacionId) {
+		this.aplicacionId = aplicacionId;
+	}
+
+	public String getNombre() {
+		return this.nombre;
+	}
+
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
+}

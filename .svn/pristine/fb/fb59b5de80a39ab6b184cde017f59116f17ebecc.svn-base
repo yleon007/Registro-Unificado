@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.0"
+	xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+	<persistence-unit name="aloDiga" transaction-type="JTA">
+		<jta-data-source>jdbc/registro</jta-data-source>
+		<class>com.ericsson.alodiga.model.Accion</class>
+		<class>com.ericsson.alodiga.model.Aplicacion</class>
+		<class>com.ericsson.alodiga.model.Bitacora</class>
+		<class>com.ericsson.alodiga.model.Cuenta</class>
+		<class>com.ericsson.alodiga.model.Direccion</class>
+		<class>com.ericsson.alodiga.model.DireccionConfianza</class>
+		<class>com.ericsson.alodiga.model.Estado</class>
+		<class>com.ericsson.alodiga.model.Idioma</class>
+		<class>com.ericsson.alodiga.model.MovilCodigo</class>
+		<class>com.ericsson.alodiga.model.Ocupacion</class>
+		<class>com.ericsson.alodiga.model.PerfilAloESP</class>
+		<class>com.ericsson.alodiga.model.PerfilAloPos</class>
+		<class>com.ericsson.alodiga.model.PerfilAloRRP</class>
+		<class>com.ericsson.alodiga.model.PreguntaIdioma</class>
+		<class>com.ericsson.alodiga.model.PreguntaSecreta</class>
+		<class>com.ericsson.alodiga.model.SesionUsuario</class>
+		<class>com.ericsson.alodiga.model.TipoDocumento</class>
+		<class>com.ericsson.alodiga.model.TipoEmpresa</class>
+		<class>com.ericsson.alodiga.model.Usuario</class>
+		<class>com.ericsson.alodiga.model.Imagen</class>
+		<class>com.ericsson.alodiga.model.UsuarioWS</class>
+		<class>com.ericsson.alodiga.model.Banco</class>
+		<class>com.ericsson.alodiga.model.CuentaBancaria</class>
+		<class>com.ericsson.alodiga.model.CuentaBancariaTipo</class>
+		<class>com.ericsson.alodiga.model.Tarjeta</class>
+		<class>com.ericsson.alodiga.model.TarjetaUsuario</class>
+		<class>com.ericsson.alodiga.model.TarjetaUsuarioPK</class>
+		<properties>
+			<property name="eclipselink.logging.level" value="ALL" />
+			<property name="eclipselink.logging.parameters" value="true" />
+			<property name="eclipselink.logging.exceptions" value="true" />
+			<property name="eclipselink.logging.level.sql" value="ALL" />
+			<property name="eclipselink.logging.file" value="jpa_output.log" />
+			<property name="eclipselink.logging.logger" value="ServerLogger" />
+		</properties>
+	</persistence-unit>
+		<persistence-unit name="saat" transaction-type="JTA">
+		<jta-data-source>jdbc/saat</jta-data-source>
+		<class>com.ericsson.alodiga.model.ConfiguracionGeneral</class>
+		<properties>
+			<property name="eclipselink.logging.level" value="ALL" />
+			<property name="eclipselink.logging.parameters" value="true" />
+			<property name="eclipselink.logging.exceptions" value="true" />
+			<property name="eclipselink.logging.level.sql" value="ALL" />
+			<property name="eclipselink.logging.file" value="jpa_output.log" />
+			<property name="eclipselink.logging.logger" value="ServerLogger" />
+		</properties>
+	</persistence-unit>
+</persistence>
