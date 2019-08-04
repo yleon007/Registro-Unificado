@@ -44,6 +44,7 @@ import com.ericsson.alodiga.model.Idioma;
 import com.ericsson.alodiga.model.Imagen;
 import com.ericsson.alodiga.model.MovilCodigo;
 import com.ericsson.alodiga.model.Ocupacion;
+import com.ericsson.alodiga.model.Pais;
 import com.ericsson.alodiga.model.PerfilAloESP;
 import com.ericsson.alodiga.model.PerfilAloPos;
 import com.ericsson.alodiga.model.PerfilAloRRP;
@@ -67,6 +68,7 @@ import com.ericsson.alodiga.respuestas.RespuestaListadoBancos;
 import com.ericsson.alodiga.respuestas.RespuestaListadoEmpresa;
 import com.ericsson.alodiga.respuestas.RespuestaListadoEstados;
 import com.ericsson.alodiga.respuestas.RespuestaListadoOcupaciones;
+import com.ericsson.alodiga.respuestas.RespuestaListadoPaises;
 import com.ericsson.alodiga.respuestas.RespuestaListadoTarjetas;
 import com.ericsson.alodiga.respuestas.RespuestaListadoTipoCuentaBancaria;
 import com.ericsson.alodiga.respuestas.RespuestaListadoTipoDocumento;
@@ -82,6 +84,9 @@ import com.ericsson.alodiga.utils.Constante;
 import com.ericsson.alodiga.utils.Encryptor;
 import com.ericsson.alodiga.utils.SendCallRegister;
 import com.ericsson.alodiga.utils.Utils;
+import com.icon.mw.ws.AloDigaProxy;
+import java.rmi.RemoteException;
+import java.util.logging.Level;
 
 
 @Stateless(name = "FsProcessor", mappedName = "ejb/FsProcessor")
@@ -393,6 +398,9 @@ public class APIOperations {
 							+ e.getCause() + e.getStackTrace());
 		}
 	}
+        
+        
+      
 
 	private boolean isEmailUnique(String email) {
 		try {
@@ -2090,7 +2098,6 @@ public class APIOperations {
 	public RespuestaListadoEstados obtenerEstadosUsuario(String usuarioApi,
 			String passwordApi) {
 		RespuestaListadoEstados respuesta = null;
-
 		if (validarUsuario(usuarioApi, passwordApi)) {
 			List<Estado> estados = this.findAllEstados();
 
@@ -2104,6 +2111,8 @@ public class APIOperations {
 		return respuesta;
 	}
 
+        
+        
 	public RespuestaGuardarUsuario guardarAgenteComercial(String usuarioApi,
 			String passwordApi, String usuarioId, String usuarioEmpresaId,
 			String nombre, String apellido, String credencial, String email,
@@ -2516,6 +2525,353 @@ public class APIOperations {
 		return new RespuestaNuevoToken(CodigoRespuesta.EXITO,
 				CodigoRespuesta.EXITO.name(), token);
 	}
+
+    public RespuestaGuardarUsuario guardarUsuarioSinCodigoMovil(String usuarioApi, String passwordApi, String usuarioId, String nombre, String apellido, String credencial, String email, String movil, String fechaNacimiento, String direccion, String paisId, String estadoId, String ciudadId, String condadoId, String codigoPostal, String nombreImagen, byte[] imagenBytes, String link, boolean isSocialNetwork) {
+         link = "http://llamadas.alodiga.com/site/welcome";
+		try {
+			if (validarUsuario(usuarioApi, passwordApi)) {
+				
+				Usuario usuario;
+				Direccion direccion1;
+				Imagen imagen1;
+				if (nombre == null || nombre.trim().equals("")) {
+					return new RespuestaGuardarUsuario(
+							CodigoRespuesta.DATOS_INVALIDOS,
+							Utils.obtieneMensaje("null.name"));
+                               }
+				 else {
+					if (!nombre.matches(Utils
+							.obtienePropiedad("REGEX_ENCOUDING_UTF-8"))) {
+						return new RespuestaGuardarUsuario(
+								CodigoRespuesta.DATOS_INVALIDOS,
+								Utils.obtieneMensaje("invalid.name"));
+					}
+				}
+				if (apellido == null || apellido.trim().equals("")) {
+					return new RespuestaGuardarUsuario(
+							CodigoRespuesta.DATOS_INVALIDOS,
+							Utils.obtieneMensaje("null.lastname"));
+				} 
+                                else {
+					if (!apellido.matches(Utils
+							.obtienePropiedad("REGEX_ENCOUDING_UTF-8"))) {
+						return new RespuestaGuardarUsuario(
+								CodigoRespuesta.DATOS_INVALIDOS,
+								Utils.obtieneMensaje("invalid.lastname"));
+					}
+				}
+				if (usuarioId == null || usuarioId.equals("")) {
+					usuario = new Usuario();
+					direccion1 = new Direccion();
+					imagen1 = new Imagen();
+					Estado estado1 = isSocialNetwork?getEstadoPorDescripcion(Estado.ACTIVO):getEstadoPorDescripcion(Estado.PENDIENTE)  ;
+					usuario.setEstado(estado1);
+					usuario.setIntentosFallidos(0);
+					if (!isEmailUnique(email)) {
+						return new RespuestaGuardarUsuario(
+								CodigoRespuesta.CORREO_YA_EXISTE);
+					}
+					if (!isMovilUnique(movil)) {
+						return new RespuestaGuardarUsuario(
+								CodigoRespuesta.NUMERO_TELEFONO_YA_EXISTE);
+					}
+					
+					
+				} else {
+					usuario = entityManager.find(Usuario.class,
+							Integer.parseInt(usuarioId));
+					if (credencial == null || credencial.trim().equals("")) {
+						return new RespuestaGuardarUsuario(
+								CodigoRespuesta.DATOS_INVALIDOS,
+								Utils.obtieneMensaje("null.password"));
+					}
+					if (email == null || email.trim().equals("")) {
+						return new RespuestaGuardarUsuario(
+								CodigoRespuesta.DATOS_INVALIDOS,
+								Utils.obtieneMensaje("null.email"));
+					}
+					if (movil == null || movil.trim().equals("")) {
+						return new RespuestaGuardarUsuario(
+								CodigoRespuesta.DATOS_INVALIDOS,
+								Utils.obtieneMensaje("null.phonenumber"));
+					}
+					if (!isEmailUnique(email)) {
+						if (!email.equalsIgnoreCase(usuario.getEmail())) {
+							return new RespuestaGuardarUsuario(
+									CodigoRespuesta.CORREO_YA_EXISTE);
+						}
+					}
+					if (isMovilUnique(movil)) {
+						
+						
+					} else {
+						if (!movil.equalsIgnoreCase(usuario.getMovil())) {
+							return new RespuestaGuardarUsuario(
+									CodigoRespuesta.NUMERO_TELEFONO_YA_EXISTE);
+						}
+					}
+					if (usuario == null) {
+						return new RespuestaGuardarUsuario(
+								CodigoRespuesta.USUARIO_NO_EXISTE);
+					}
+					direccion1 = usuario.getDireccion();
+					imagen1 = usuario.getImagen();
+					if (imagen1 == null && imagenBytes != null) {
+						imagen1 = new Imagen();
+					}
+				}
+				if (paisId == null || paisId.equals("")
+						|| Integer.parseInt(paisId) == 0) {
+					return new RespuestaGuardarUsuario(
+							CodigoRespuesta.DATOS_INVALIDOS, "PAIS_NULO");
+				}
+				logger.debug("saving user " + usuario.getNombre());
+				usuario.setApellido(apellido);
+				direccion1.setCiudadId(!StringUtils.isEmpty(ciudadId) ? Integer
+						.parseInt(ciudadId) : 0);
+				direccion1
+						.setCondadoId(!StringUtils.isEmpty(condadoId) ? Integer
+								.parseInt(condadoId) : 0);
+				direccion1.setCodigoPostal(codigoPostal);
+				direccion1.setDireccion(direccion);
+				direccion1.setEstadoId(!StringUtils.isEmpty(estadoId) ? Integer
+						.parseInt(estadoId) : 0);
+				direccion1.setPaisId(!StringUtils.isEmpty(paisId) ? Integer
+						.parseInt(paisId) : 0);
+				usuario.setDireccion(direccion1);
+				if (nombreImagen != null)
+					imagen1.setNombre(nombreImagen);
+				if (imagenBytes != null)
+					imagen1.setImagen(imagenBytes);
+				usuario.setImagen(imagen1);
+				usuario.setEmail(email);
+                             
+				Cuenta cuenta = new Cuenta();
+				cuenta.setNumeroCuenta(Utils.generarNumeroDeCuenta());
+				cuenta.setSaldoAlocoins(0d);
+				cuenta.setSaldoAlodiga(0d);
+				cuenta.setSaldoHealthCareCoins(0d);
+				usuario.setCuenta(cuenta);
+                                if (null != fechaNacimiento) {
+                                        DateFormat format = new SimpleDateFormat("dd-MM-yyyy",
+                                        Locale.ENGLISH);
+                                        Date date = format.parse(fechaNacimiento);
+                                        usuario.setFechaNacimiento(date);
+                                }
+                                usuario.setMovil(movil);
+				usuario.setNombre(nombre);
+				usuario.setCredencial(credencial);
+				usuario.setCredencialFecha(new Date());
+
+				logger.debug("usuario: --->" + usuario);
+				logger.debug("direccion1: --->" + direccion1);
+				logger.debug("cuenta: --->" + cuenta);
+
+				if (usuarioId == null) {
+					entityManager.persist(usuario);
+					logger.info("**************Sending email to user ********************"
+							+ usuario.getNombre());
+
+					Utils.enviarCorreUsuarioNuevo("ES", usuario, link);
+                                        usuario.setEmail(email);
+				} else {
+					usuario = entityManager.merge(usuario);
+				}
+
+                                RespuestaGuardarUsuario respuestaGuardarUsuario = new RespuestaGuardarUsuario(CodigoRespuesta.EXITO,
+						CodigoRespuesta.EXITO.name(), usuario);
+                                
+				return respuestaGuardarUsuario;
+			}
+			return new RespuestaGuardarUsuario(
+					CodigoRespuesta.ERROR_CREDENCIALES);
+		} catch (ConstraintViolationException e) {
+			ConstraintViolationImpl<?> cv = (ConstraintViolationImpl<?>) e
+					.getConstraintViolations().toArray()[0];
+			return new RespuestaGuardarUsuario(CodigoRespuesta.DATOS_INVALIDOS,
+					cv.getMessage());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new RespuestaGuardarUsuario(CodigoRespuesta.ERROR_INTERNO,
+					"Error - " + e.getMessage() + e.getLocalizedMessage()
+							+ e.getCause() + e.getStackTrace());
+		}
+    }
+
+    
+    
+    
+   public RespuestaListadoPaises getPaises(String usuarioApi,
+			String passwordApi) {
+		try {
+			if (validarUsuario(usuarioApi, passwordApi)) {
+				List<Pais> lista =  new ArrayList<Pais>();
+                                
+                                AloDigaProxy proxy = new AloDigaProxy();
+                                com.icon.mw.ws.Respuesta respuesta = new com.icon.mw.ws.Respuesta();
+                                
+                                for (int i=0;i<respuesta.getDatosRespuesta().length;i++){
+                                       
+                                    respuesta.getDatosRespuesta()[i].toString();
+                                    
+                                 }
+
+                                
+				return new RespuestaListadoPaises(CodigoRespuesta.EXITO,
+						null, lista);
+			} else {
+				return new RespuestaListadoPaises(
+						CodigoRespuesta.ERROR_CREDENCIALES);
+			}
+		} catch (Exception e) {
+			logger.error(e);
+			return new RespuestaListadoPaises(
+					CodigoRespuesta.ERROR_INTERNO, e.getMessage());
+		}
+	}
+   
+   
+   public RespuestaNuevoToken loginApp(String usuarioApi, String passwordApi,
+			String email, String movil, String credencial, String ip) {
+
+		if (!validarUsuario(usuarioApi, passwordApi)) {
+			return new RespuestaNuevoToken(CodigoRespuesta.ERROR_CREDENCIALES);
+		}
+
+		if (!Utils.isStringValido(movil) && !Utils.isStringValido(email)) {
+			return new RespuestaNuevoToken(CodigoRespuesta.DATOS_NULOS);
+		}
+		
+//		ConfiguracionGeneral diasValidezCredencial = entityManagerSaat
+//				.createNamedQuery("getConfiguracionGeneralByNombre",
+//						ConfiguracionGeneral.class)
+//				.setParameter("nombreConfiguracion", "DIAS_MAXIMO_CREDENCIAL")
+//				.getSingleResult();
+
+		Usuario usuario = getLoginUsuario(email, movil);
+		
+		
+		if (usuario == null) {
+			return new RespuestaNuevoToken(CodigoRespuesta.USUARIO_NO_EXISTE);
+		}
+		DateTime fechaActual = new DateTime();
+		DateTime fechaCredencial = new DateTime(usuario.getCredencialFecha());
+//		fechaCredencial = fechaCredencial.plusDays(Integer
+//				.parseInt(diasValidezCredencial.getValorConfiguracion()));
+		if (usuario.getEstado().getDescripcion().equals(Estado.BLOQUEADO)) {
+			return new RespuestaNuevoToken(CodigoRespuesta.USUARIO_BLOQUEADO);
+		} /*else if (fechaCredencial.isBefore(fechaActual)) {
+			return new RespuestaNuevoToken(CodigoRespuesta.CONTRASENIA_EXPIRADA);
+		}*/ else if (!usuario.getCredencial().equals(credencial)) {
+			usuario.setIntentosFallidos(usuario.getIntentosFallidos() + 1);
+			Accion action = entityManager
+					.createNamedQuery("Accion.byDescripcion", Accion.class)
+					.setParameter("descripcion", Accion.INTENTO_FALLIDO)
+					.getSingleResult();
+			entityManager.persist(new Bitacora(ip, action, usuario));
+			entityManager.merge(usuario);
+			if (usuario.getIntentosFallidos() == 3) {
+				usuario.setEstado(getEstadoPorDescripcion(Estado.BLOQUEADO));
+				Utils.enviarCorreoBloqueo("ES", usuario);
+			}
+			return new RespuestaNuevoToken(
+					CodigoRespuesta.CREDENCIALES_INVALIDAS);
+		} else if (usuario.getEstado().getDescripcion()
+				.equals(Estado.PENDIENTE)) {
+			return new RespuestaNuevoToken(CodigoRespuesta.USUARIO_PENDIENTE);
+		}
+
+		// Comentado para pruebas de Alodiga
+
+		/*
+		 * DireccionConfianza direccion = null; try { direccion =
+		 * getDireccionConfianza(usuario, ip); } catch (NoResultException e) {
+		 * return new RespuestaNuevoToken(CodigoRespuesta.IP_NO_CONFIANZA); }
+		 */
+
+		// Agregado unicamente para pruebas de Alodiga
+
+		DireccionConfianza direccion = entityManager.find(
+				DireccionConfianza.class, 2);
+
+		if (usuario.getPreguntaSecretas() == null
+				|| usuario.getPreguntaSecretas().isEmpty()) {
+			return new RespuestaNuevoToken(CodigoRespuesta.PRIMER_INGRESO);
+		}
+
+		
+		usuario.setIntentosFallidos(0);
+		SesionUsuario sesion = new SesionUsuario();
+		sesion.setActivo(true);
+		sesion.setDireccionConfianza(direccion);
+		sesion.setFechaActividad(new Date());
+		sesion.setUsuario(usuario);
+		String token = UUID.randomUUID().toString();
+		sesion.setToken(token);
+		System.out.println("token: " + token);
+		Accion action = entityManager
+				.createNamedQuery("Accion.byDescripcion", Accion.class)
+				.setParameter("descripcion", Accion.LOGIN).getSingleResult();
+		
+		entityManager.persist(new Bitacora(ip, action, usuario));
+		entityManager.persist(sesion);
+		entityManager.merge(usuario);
+		
+		return new RespuestaNuevoToken(CodigoRespuesta.EXITO,
+				CodigoRespuesta.EXITO.name(), token);
+		
+	}
+   
+   public Respuesta setPreguntasSecretasUsuarioSeparator(String usuarioApi, String passwordApi,String usuarioId) {
+       
+              if (!validarUsuario(usuarioApi, passwordApi)) {
+				return new RespuestaListadoPaises(
+						CodigoRespuesta.ERROR_CREDENCIALES);
+		}else{
+                  
+             
+                List<PreguntaSecreta> preguntasSecretas = new ArrayList<PreguntaSecreta>();
+                PreguntaSecreta preguntaSecreta1 = new PreguntaSecreta();
+                preguntaSecreta1.setPreguntaSecretaId(Integer.valueOf("1"));
+                preguntaSecreta1.setRespuesta("DefaultValueApp");
+                preguntaSecreta1.setPreguntaId(Integer.valueOf("1"));
+                preguntasSecretas.add(preguntaSecreta1);
+                
+                PreguntaSecreta preguntaSecreta2 = new PreguntaSecreta();
+                preguntaSecreta2.setPreguntaSecretaId(Integer.valueOf("2"));
+                preguntaSecreta2.setRespuesta("DefaultValueApp");
+                preguntaSecreta2.setPreguntaId(Integer.valueOf("2"));
+                preguntasSecretas.add(preguntaSecreta2);
+                PreguntaSecreta preguntaSecreta3 = new PreguntaSecreta();
+                preguntaSecreta3.setPreguntaId(Integer.valueOf("3"));
+                preguntaSecreta3.setPreguntaSecretaId(Integer.valueOf("3"));
+                preguntaSecreta3.setRespuesta("DefaultValueApp");
+                preguntasSecretas.add(preguntaSecreta3);
+                try {
+			if (preguntasSecretas == null || preguntasSecretas.isEmpty()
+					|| preguntasSecretas.size() < 2) {
+				return new Respuesta(CodigoRespuesta.DATOS_NULOS);
+			}
+			if (preguntasSecretas.size() > 3) {
+				return new Respuesta(CodigoRespuesta.DATOS_INVALIDOS);
+			}
+			Usuario usuario = entityManager.find(Usuario.class, Integer.valueOf(usuarioId));
+			for (PreguntaSecreta preguntaSecreta : preguntasSecretas) {
+				preguntaSecreta.setUsuario(usuario);
+			}
+			usuario.setPreguntaSecretas(preguntasSecretas);
+			entityManager.merge(usuario);
+		} catch (NoResultException e) {
+			return new Respuesta(CodigoRespuesta.USUARIO_NO_EXISTE);
+		} catch (Exception e) {
+			return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
+		}
+		return new Respuesta(CodigoRespuesta.EXITO);
+               }
+	}
+   
+   
+   
 
 }
 

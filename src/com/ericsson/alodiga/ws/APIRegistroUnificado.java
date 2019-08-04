@@ -20,6 +20,7 @@ import com.ericsson.alodiga.respuestas.RespuestaListadoBancos;
 import com.ericsson.alodiga.respuestas.RespuestaListadoEmpresa;
 import com.ericsson.alodiga.respuestas.RespuestaListadoEstados;
 import com.ericsson.alodiga.respuestas.RespuestaListadoOcupaciones;
+import com.ericsson.alodiga.respuestas.RespuestaListadoPaises;
 import com.ericsson.alodiga.respuestas.RespuestaListadoTarjetas;
 import com.ericsson.alodiga.respuestas.RespuestaListadoTipoCuentaBancaria;
 import com.ericsson.alodiga.respuestas.RespuestaListadoTipoDocumento;
@@ -30,7 +31,9 @@ import com.ericsson.alodiga.respuestas.RespuestaPreguntasSecretas;
 import com.ericsson.alodiga.respuestas.RespuestaPreguntasSecretasUsuario;
 import com.ericsson.alodiga.respuestas.RespuestaToken;
 import com.ericsson.alodiga.respuestas.RespuestaUsuario;
+import com.icon.mw.ws.AloDigaProxy;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 
 @WebService
 public class APIRegistroUnificado {
@@ -107,6 +110,39 @@ public class APIRegistroUnificado {
                 codigoValidacionMovil, nombreImagen, imagenBytes, link,false);
 
     }
+    
+    
+     @WebMethod
+    public RespuestaGuardarUsuario guardarUsuarioWithOutConfirmationCode(
+            @WebParam(name = "usuarioApi") String usuarioApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "usuarioId") String usuarioId,
+            @WebParam(name = "nombre") String nombre,
+            @WebParam(name = "apellido") String apellido,
+            @WebParam(name = "credencial") String credencial,
+            @WebParam(name = "email") String email,
+            @WebParam(name = "movil") String movil,
+            @WebParam(name = "fechaNacimiento") String fechaNacimiento,
+            @WebParam(name = "direccion") String direccion,
+            @WebParam(name = "paisId") String paisId,
+            @WebParam(name = "estadoId") String estadoId,
+            @WebParam(name = "ciudadId") String ciudadId,
+            @WebParam(name = "condadoId") String condadoId,
+            @WebParam(name = "codigoPostal") String codigoPostal,
+            @WebParam(name = "nombreImagen") String nombreImagen,
+            @WebParam(name = "imagenBytes") byte[] imagenBytes,
+            @WebParam(name = "link") String link) {
+        logger.debug("guardar usuario");
+        return operations.guardarUsuarioSinCodigoMovil(usuarioApi, passwordApi, usuarioId,
+                nombre, apellido, credencial, email, movil, fechaNacimiento,
+                direccion, paisId, estadoId, ciudadId, condadoId, codigoPostal,
+                 nombreImagen, imagenBytes, link,true);
+
+    }
+    
+    
+    
+    
 
     @WebMethod
     public RespuestaGuardarUsuario guardarPerfilAloPos(
@@ -512,6 +548,9 @@ public class APIRegistroUnificado {
                 passwordApi, empresaId, tipoPersona);
     }
 
+    
+    
+
     @WebMethod
     public RespuestaGuardarUsuario guardarAgenteComercial(
             @WebParam(name = "usuarioApi") String usuarioApi,
@@ -616,5 +655,28 @@ public class APIRegistroUnificado {
                 codigoValidacionMovil, null,b,"http://llamadas.alodiga.com/site/welcome",true);
 
     }
+    
+    
+      @WebMethod
+    public RespuestaListadoPaises getPaises(
+            @WebParam(name = "usuarioApi") String usuarioApi,
+            @WebParam(name = "passwordApi") String passwordApi) {
+        return operations.getPaises(usuarioApi, passwordApi);
+    }
+    
+    
+    
+       @WebMethod
+    public Respuesta setPreguntasSecretasUsuarioSeparator(
+            @WebParam(name = "usuarioApi") String usuarioApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "usuarioId") String usuarioId)
+    {
+        return operations.setPreguntasSecretasUsuarioSeparator(usuarioApi,passwordApi,usuarioId);
+    }
+
+    
+    
+    
     
 }
