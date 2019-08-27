@@ -608,10 +608,10 @@ public class APIRegistroUnificado {
             @WebParam(name = "usuarioId2") String usuarioId2,
             @WebParam(name = "usuarioApi") String usuarioApi,
             @WebParam(name = "passwordApi") String passwordApi,
-            @WebParam(name = "alocoins") String alocoins
+            @WebParam(name = "saldoAlodiga") String saldoAlodiga
     ) {
         logger.debug("transferirAlocoins");
-        return operations.transferirAlocoins(usuarioId1, usuarioId2, usuarioApi, passwordApi, alocoins);
+        return operations.transferirAlocoins(usuarioId1, usuarioId2, usuarioApi, passwordApi, saldoAlodiga);
 
     }
 
@@ -675,8 +675,30 @@ public class APIRegistroUnificado {
         return operations.setPreguntasSecretasUsuarioSeparator(usuarioApi,passwordApi,usuarioId);
     }
 
+    @WebMethod
+    public Respuesta transferirSaldoAlodiga(
+            @WebParam(name = "usuarioId1") String usuarioId1,
+            @WebParam(name = "usuarioId2") String usuarioId2,
+            @WebParam(name = "usuarioApi") String usuarioApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "saldoAlodiga") String saldoAlodiga
+    ) {
+        logger.debug("transferirSaldoAlodiga");
+        return operations.transferirSaldoAlodiga(usuarioId1, usuarioId2, usuarioApi, passwordApi, saldoAlodiga);
+
+    }
     
-    
-    
+    @WebMethod
+    public Respuesta transferirSaldoHealthCareCoins(
+            @WebParam(name = "usuarioId1") String usuarioId1,
+            @WebParam(name = "usuarioId2") String usuarioId2,
+            @WebParam(name = "usuarioApi") String usuarioApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "saldoAlodiga") String saldoAlodiga
+    ) {
+        logger.debug("transferirSaldoAlodiga");
+        return operations.transferirSaldoHealthCareCoins(usuarioId1, usuarioId2, usuarioApi, passwordApi, saldoAlodiga);
+
+    }
     
 }

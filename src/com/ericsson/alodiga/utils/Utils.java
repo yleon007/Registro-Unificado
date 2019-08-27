@@ -560,4 +560,28 @@ public class Utils {
                 Utils.obtienePropiedad("mail.user"), null);
     }
 
+    public static void enviarCorreoTransferenciaSaldoAlodiga(String idioma, Usuario usuario, String mensaje) {
+
+        String subject = null;
+        if (idioma.equalsIgnoreCase("ES")) {
+
+            subject = "Transferencia de Saldo Alodiga";
+        }
+
+        EnvioCorreo.enviarCorreoHtml(new String[]{usuario.getEmail()},
+                subject, mensaje, Utils.obtienePropiedad("mail.user"), null);
+    }
+    
+    
+    public static void enviarCorreoTransferenciaSaldoHealthCoins(String idioma, Usuario usuario, String mensaje) {
+
+        String subject = null;
+        if (idioma.equalsIgnoreCase("ES")) {
+
+            subject = "Transferencia de Saldo Health Coins";
+        }
+
+        EnvioCorreo.enviarCorreoHtml(new String[]{usuario.getEmail()},
+                subject, mensaje, Utils.obtienePropiedad("mail.user"), null);
+    }
 }

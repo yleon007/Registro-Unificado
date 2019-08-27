@@ -86,6 +86,7 @@ import com.ericsson.alodiga.utils.SendCallRegister;
 import com.ericsson.alodiga.utils.Utils;
 import com.icon.mw.ws.AloDigaProxy;
 import java.rmi.RemoteException;
+import java.text.DecimalFormat;
 import java.util.logging.Level;
 
 
@@ -2364,9 +2365,12 @@ public class APIOperations {
 			{
 				double alocoins_cuenta=usuario1.getCuenta().getSaldoAlocoins();
 				
-				usuario1.getCuenta().setSaldoAlocoins(alocoins_cuenta-Integer.parseInt(alocoins));
-				usuario2.getCuenta().setSaldoAlocoins(usuario2.getCuenta().getSaldoAlocoins()+Integer.parseInt(alocoins));
-				
+                                
+                                DecimalFormat df = new DecimalFormat("#.##");
+                                Double valAccount5 = (alocoins_cuenta - Float.valueOf(alocoins));
+                                Double valAccount6 = (usuario2.getCuenta().getSaldoAlocoins() + Float.valueOf(alocoins));
+				usuario1.getCuenta().setSaldoAlocoins(Double.valueOf(df.format(valAccount5)));
+				usuario2.getCuenta().setSaldoAlocoins(Double.valueOf(df.format(valAccount6)));
 				entityManager.persist(usuario1);
 				entityManager.persist(usuario2);
 				
@@ -2870,10 +2874,104 @@ public class APIOperations {
                }
 	}
    
+   public Respuesta transferirSaldoAlodiga(String usuarioId1, String usuarioId2, String usuarioApi, String passwordApi, String saldoAlodiga){
+		Respuesta respuesta= null;
+		if (!validarUsuario(usuarioApi, passwordApi)) {
+			return new Respuesta(
+					CodigoRespuesta.ERROR_CREDENCIALES);
+		}
+		
+		if(usuarioId1==null||usuarioId1.equals("")||usuarioId2==null||usuarioId2.equals("")
+		   ||saldoAlodiga==null||saldoAlodiga.equals("")){
+			
+			return new Respuesta(CodigoRespuesta.DATOS_NULOS);
+			
+		}else{
+			
+			Usuario usuario1 = entityManager.find(Usuario.class, Integer.parseInt(usuarioId1));
+			Usuario usuario2 = entityManager.find(Usuario.class, Integer.parseInt(usuarioId2));
+			
+			if(usuario1!=null &&usuario2!=null)
+			{
+				Double alodiga_cuenta=usuario1.getCuenta().getSaldoAlodiga();
+				
+                                DecimalFormat df = new DecimalFormat("#.##");
+                                Double valAccount3 = (alodiga_cuenta - Float.valueOf(saldoAlodiga));
+                                Double valAccount4 = (usuario2.getCuenta().getSaldoAlodiga() + Float.valueOf(saldoAlodiga)); 
+				usuario1.getCuenta().setSaldoAlodiga(Double.valueOf(df.format(valAccount3)));
+				usuario2.getCuenta().setSaldoAlodiga(Double.valueOf(df.format(valAccount4)));
+				entityManager.persist(usuario1);
+				entityManager.persist(usuario2);
+				
+				String mensaje="";
+				
+				mensaje="Se ha realizado la transferencia a "+usuario2.getNombre()+" "+usuario2.getApellido()+" exitosamente.<br/>"+
+						"Resumen<br/>"+
+						"Saldo Alodiga enviados: "+saldoAlodiga+"<br/>"+
+						"Fecha: "+(new Date().toLocaleString());
+				
+				Utils.enviarCorreoTransferenciaSaldoAlodiga("ES", usuario1, mensaje);
+				
+				
+				return new Respuesta(CodigoRespuesta.EXITO);
+			}
+		}
+		
+		return respuesta;
+                
+                
+                
+                
+	}
    
-   
+public Respuesta transferirSaldoHealthCareCoins(String usuarioId1, String usuarioId2, String usuarioApi, String passwordApi, String saldoHealthCareCoins){
+		Respuesta respuesta= null;
+		if (!validarUsuario(usuarioApi, passwordApi)) {
+			return new Respuesta(
+					CodigoRespuesta.ERROR_CREDENCIALES);
+		}
+		
+		if(usuarioId1==null||usuarioId1.equals("")||usuarioId2==null||usuarioId2.equals("")
+		   ||saldoHealthCareCoins==null||saldoHealthCareCoins.equals("")){
+			
+			return new Respuesta(CodigoRespuesta.DATOS_NULOS);
+			
+		}else{
+			
+			Usuario usuario1 = entityManager.find(Usuario.class, Integer.parseInt(usuarioId1));
+			Usuario usuario2 = entityManager.find(Usuario.class, Integer.parseInt(usuarioId2));
+			
+			if(usuario1!=null &&usuario2!=null)
+			{
+				Double healthCoins_cuenta = usuario1.getCuenta().getSaldoHealthCareCoins();
+				
+                                DecimalFormat df = new DecimalFormat("#.##");
+                                Double valAccount1 = (healthCoins_cuenta - Float.valueOf(saldoHealthCareCoins));
+                                Double valAccount2 = (usuario2.getCuenta().getSaldoHealthCareCoins()+ Float.valueOf(saldoHealthCareCoins));
+				usuario1.getCuenta().setSaldoHealthCareCoins(Double.valueOf(df.format(valAccount1)));
+				usuario2.getCuenta().setSaldoHealthCareCoins(Double.valueOf(df.format(valAccount2)));
+				
+				entityManager.persist(usuario1);
+				entityManager.persist(usuario2);
+				
+				String mensaje="";
+				
+				mensaje="Se ha realizado la transferencia a "+usuario2.getNombre()+" "+usuario2.getApellido()+" exitosamente.<br/>"+
+						"Resumen<br/>"+
+						"Saldo Alodiga enviados: "+saldoHealthCareCoins+"<br/>"+
+						"Fecha: "+(new Date().toLocaleString());
+				
+				Utils.enviarCorreoTransferenciaSaldoHealthCoins("ES", usuario1, mensaje);
+				
+				
+				return new Respuesta(CodigoRespuesta.EXITO);
+			}
+		}
+            return respuesta;
+}
 
 }
+
 
 
 
