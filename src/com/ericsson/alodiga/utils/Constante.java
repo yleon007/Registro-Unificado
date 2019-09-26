@@ -108,6 +108,15 @@ public class Constante {
         public static final String sCLIENTE_RRP = "ProgramRRP";
         public static final String socialNetworkPassword = "Alo+123";
         
+        //Language
+        public static final Long SPANISH_LANGUAGE = 1L;
+        public static final Long ENGLISH_LANGUAGE = 2L;
 
+        
+        // constantes SendTypeEmail
+	public static final Integer SEND_TYPE_EMAIL_REGISTER = 1;
+        public static final Integer SEND_TYPE_EMAIL_COMPRA = 2;
+        public static final Integer SEND_TYPE_EMAIL_COMERCE_PEYMENT = 3;
+        
 
 }
