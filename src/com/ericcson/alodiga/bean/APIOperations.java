@@ -589,7 +589,7 @@ public class APIOperations {
 //                    AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
                     //Envio de Correo Electronico
                     SendMailTherad sendMailTherad = new SendMailTherad("ES", usuario, Integer.valueOf("1"));
-
+                    sendMailTherad.run();
                     usuario.setEmail(email);
                     
                 } else {
