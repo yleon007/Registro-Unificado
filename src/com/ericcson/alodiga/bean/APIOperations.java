@@ -88,6 +88,7 @@ import com.ericsson.alodiga.utils.Constante;
 import com.ericsson.alodiga.utils.Encryptor;
 import com.ericsson.alodiga.utils.Mail;
 import com.ericsson.alodiga.utils.SendCallRegister;
+import com.ericsson.alodiga.utils.SendMailTherad;
 import com.ericsson.alodiga.utils.SendSmsRegister;
 import com.ericsson.alodiga.utils.Utils;
 import java.rmi.RemoteException;
@@ -581,12 +582,13 @@ public class APIOperations {
                     
                     logger.info("**************Sending email to user ********************"
                             + usuario.getNombre());
-
-                    //Utils.enviarCorreUsuarioNuevo("ES", usuario, link);
-                    //Envio de Correo Electronico  
-                    Mail mail = Utils.enviarCorreUsuarioNuevoAplicacionMovil("ES", usuario);
-                    AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
+                    
+//                    //Utils.enviarCorreUsuarioNuevo("ES", usuario, link);
+//                    //Envio de Correo Electronico  
+//                    Mail mail = Utils.enviarCorreUsuarioNuevoAplicacionMovil("ES", usuario);
+//                    AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
                     //Envio de Correo Electronico
+                    SendMailTherad sendMailTherad = new SendMailTherad("ES", usuario, Integer.valueOf("1"));
 
                     usuario.setEmail(email);
                     
@@ -2922,7 +2924,7 @@ public class APIOperations {
         transaction.setId(2L);
         transaction.setTotalAmount(Float.valueOf("100"));
         
-        System.out.println(Utils.enviarCorreUsuarioCompraSaldo("ES", usuario, transaction).getBody());        
+        System.out.println(Utils.enviarCorreUsuarioRetiro("ES", usuario, transaction, 2F, 4F).getBody());        
         
     }
     
