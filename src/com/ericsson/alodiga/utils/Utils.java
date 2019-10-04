@@ -48,6 +48,9 @@ import com.lexisnexis.bridgerinsight.BridgerInsight_Web_Services_Interfaces_9_0.
 import com.lexisnexis.bridgerinsight.BridgerInsight_Web_Services_Interfaces_9_0.SearchResults;
 import com.lexisnexis.bridgerinsight.BridgerInsight_Web_Services_Interfaces_9_0.XGServicesLocator;
 import com.mysql.jdbc.BalanceStrategy;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 
@@ -550,11 +553,11 @@ public class Utils {
         String hello = "Hola";
         String subject = "Gracias por registrarse en AlodigaWallet";
         String text1 = "Gracias por registrarse en AlodigaWallet, ahora podr&aacute; disfrutar de todos los productos de su Billetera M&oacute;vil";
-        String text2 = "Gracias por registrarse en AlodigaWallet";
+        String text2 = "Datos de su registro: ";
         String name = "Nombre: ";
         String lastName= "Apellido: ";
         String Email= "Email: ";
-        String Password= "Contraseña: ";
+        String Credencial= "Contraseña: ";
         String numberMovil= "N&uacute;mero Celular: ";
         String date = "Fecha: ";
         String account_number = "N&uacute;mero de cuenta: ";
@@ -566,12 +569,12 @@ public class Utils {
             if (idioma.equalsIgnoreCase("EN")) {
             hello = "Hello";
             subject = "Thank you for registering in AlodigaWallet";
-            text1 = "Thank you for registering in AlodigaWallet";
-            text2 = "Thank you for registering in AlodigaWallet";
+            text1 = "Thank you for registering with AlodigaWallet, now you can enjoy all the products of your Mobile Wallet";
+            text2 = "Registration data: ";
             name = "Name: ";
             lastName = "Last Name: ";
             Email = "Email: ";
-            Password="Password: ";
+            Credencial="Password: ";
             numberMovil = "Movil Number: ";
             date = "Date:";
             account_number = "Account Number: ";
@@ -592,7 +595,7 @@ public class Utils {
         body += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/><style type='text/css'>.Estilo11 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #333333; font-size:13px; font-weight:bold;}</style><style type='text/css'>.Estilo12 {font:13px/0.6em Arial,Helvetica,sans-serif,lighter; color: #666; font-size:13px;}</style><style type='text/css'>.EstiloColumn {background-color: #555555;color:#FFBF00;font:12px/1.8em Arial,Helvetica,sans-serif,lighter;font-weight:bold;padding-left:10px}</style>" + "<div align='center'>"
                 + "<table width='756' height='600' border='0'>"
                 + "<tr><th width='750' height='595'><p>"
-                + "<img src='http://sales.alodiga.com/images/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
+                //+ "<img src='http://sales.alodiga.com/images/img-alodiga-logo.png' align='left' width='114' height='90' longdesc='Logo alodiga' />"
                 + "</p><p>&nbsp;</p>" + "<p>&nbsp;</p>"
                 + "<table  width='730' border='0' >"
                 + "<tr><th width='728' height='20' align='right' bgcolor='#4c8e41' style='color:#FFFF;font:16px/1.8em Arial,Helvetica,sans-serif,lighter;'>" + text2 + "</th></tr>"
@@ -606,6 +609,10 @@ public class Utils {
                 + text1 + "<br><br></p>"
                 + "</th>"
                 + "</tr>"
+                + "<tr>"
+                + "<th><p align='left' style='font: 16px/1.8em Arial,Helvetica,sans-serif,lighter ; color: #666; font-weight:bold; display: table;  margin: 0; padding:0;' >"
+                + text2
+                + "</p></th></tr>"
                 + "<tr height='3px'><th width='728' bgcolor='#232323'></th></tr>"
                 + "<tr>"
                 + "<th>"
@@ -621,10 +628,7 @@ public class Utils {
                 + Email + "" + usuario.getEmail()+" </div></td>"
                 + "</tr>"
                 
-                + "<tr height='30px'><td " + style2 + " width='305'><div align='left'>"
-                + Password + "" + usuario.getCredencial()+" </div></td>"
-                + "</tr>"
-                
+
                 + "<tr height='30px'><td " + style2 + " width='305'><div align='left'>"
                 + numberMovil + "" + usuario.getMovil()+" </div></td>"
                 + "</tr>"
@@ -734,7 +738,7 @@ public class Utils {
                 + "<tr height='3px'><th width='728' bgcolor='#232323'></th></tr>"
                 + "<tr>"
                 + "<th>"
-                + "<div><table width='705' border='0' cellpadding='2' cellspancing='0' style='border:inherit'>"
+                + "<div><table width='728' border='0' cellpadding='2' cellspancing='0' style='border:inherit'>"
                 
                 + "<tr height='30px'><td " + style2 + " width='305'><div align='left'>"
                 + Name + "" + usuario.getNombre() +"</div></td>"
@@ -852,7 +856,7 @@ public class Utils {
                 + "<tr height='3px'><th width='728' bgcolor='#232323'></th></tr>"
                 + "<tr>"
                 + "<th>"
-                + "<div><table width='705' border='0' cellpadding='2' cellspancing='0' style='border:inherit'>"
+                + "<div><table width='728' border='0' cellpadding='2' cellspancing='0' style='border:inherit'>"
                 
                 + "<tr height='30px'><td " + style2 + " width='305'><div align='left'>"
                 + Name + "" + usuario.getNombre() +"</div></td>"
@@ -967,11 +971,10 @@ public class Utils {
                 + "<tr height='3px'><th width='728' bgcolor='#232323'></th></tr>"
                 + "<tr>"
                 + "<th>"
-                + "<div><table width='705' border='0' cellpadding='2' cellspancing='0' style='border:inherit'>"
+                + "<div><table width='728' border='0' cellpadding='2' cellspancing='0' style='border:inherit'>"
                 + "<tr height='30px'><td " + style2 + " width='305'><div align='left'>"
                 + Name + "" + usuario.getNombre()+ "</div></td>"
-                + "<tr height='30px'><td " + style2 + " width='305'><div align='left' >"
-                + pass + "" + usuario.getCredencial()+"</div></td>"
+                
                 + "<tr height='30px'><td " + style2 + " width='305'><div align='left'>"
                 + Email + "" + usuario.getEmail()+" </div></td>"
                 + "</tr>"
@@ -1077,7 +1080,7 @@ public class Utils {
                 + "<tr height='3px'><th width='728' bgcolor='#232323'></th></tr>"
                 + "<tr>"
                 + "<th>"
-                + "<div><table width='705' border='0' cellpadding='2' cellspancing='0' style='border:inherit'>"
+                + "<div><table width='728' border='0' cellpadding='2' cellspancing='0' style='border:inherit'>"
                 
                 + "<tr height='30px'><td " + style2 + " width='305'><div align='left'>"
                 + Name + "" + usuario.getNombre() +"</div></td>"
@@ -1152,5 +1155,45 @@ public class Utils {
         EnvioCorreo.enviarCorreoHtml(new String[]{email}, subject, mensaje,
                 Utils.obtienePropiedad("mail.user"), null);
     }
+    
 
+    /**
+     * Realiza una codificación Hash MD5 al texto pasado por parámetro.
+     * @param text	Texto a codificar.
+     * @return java.lang.String
+     * @throws NoSuchAlgorithmException
+     * @throws UnsupportedEncodingException
+     */
+    public static String MD5(String text)
+            throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        MessageDigest md;
+        md = MessageDigest.getInstance("MD5");
+        byte[] md5hash = new byte[32];
+        md.update(text.getBytes("iso-8859-1"), 0, text.length());
+        md5hash = md.digest();
+        return convertToHex(md5hash);
+    }
+    
+      /**
+     * Codifica los bytes en formato Hexadecimal.
+     * @param data	Datos a codificar.
+     * @return java.lang.String
+     */
+    private static String convertToHex(byte[] data) {
+        StringBuffer buf = new StringBuffer();
+        for (int i = 0; i < data.length; i++) {
+            int halfbyte = (data[i] >>> 4) & 0x0F;
+            int two_halfs = 0;
+            do {
+                if ((0 <= halfbyte) && (halfbyte <= 9)) {
+                    buf.append((char) ('0' + halfbyte));
+                } else {
+                    buf.append((char) ('a' + (halfbyte - 10)));
+                }
+                halfbyte = data[i] & 0x0F;
+            } while (two_halfs++ < 1);
+        }
+        return buf.toString();
+    }
+    
 }

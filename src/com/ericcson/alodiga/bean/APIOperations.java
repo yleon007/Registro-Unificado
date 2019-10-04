@@ -1,6 +1,9 @@
 package com.ericcson.alodiga.bean;
 
+import com.alodiga.security.encryption.S3cur1ty3Cryt3r;
+import com.alodiga.security.exception.KeyLongException;
 import com.alodiga.wallet.ws.APIAlodigaWalletProxy;
+import com.alodiga.wallet.ws.BalanceHistoryResponse;
 import com.alodiga.wallet.ws.Product;
 import com.alodiga.wallet.ws.ProductListResponse;
 import com.alodiga.wallet.ws.Transaction;
@@ -92,7 +95,11 @@ import com.ericsson.alodiga.utils.SendMailTherad;
 import com.ericsson.alodiga.utils.SendSmsRegister;
 import com.ericsson.alodiga.utils.Utils;
 import java.rmi.RemoteException;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.mail.MessagingException;
 import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec;
 
@@ -563,10 +570,11 @@ public class APIOperations {
                 }
                 usuario.setMovil(movil);
                 usuario.setNombre(nombre);
-                usuario.setCredencial(credencial);
+                String valueCredencial = S3cur1ty3Cryt3r.aloEncrpter(credencial, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+                usuario.setCredencial(Utils.MD5(valueCredencial));
                 usuario.setCredencialFecha(new Date());
-                usuario.setPin(pin);
-                
+                String value = S3cur1ty3Cryt3r.aloEncrpter(pin, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+                usuario.setPin(Utils.MD5(value));
                 logger.debug("usuario: --->" + usuario);
                 logger.debug("direccion1: --->" + direccion1);
                 logger.debug("cuenta: --->" + cuenta);
@@ -1495,18 +1503,17 @@ public class APIOperations {
 			return new RespuestaNuevoToken(CodigoRespuesta.CONTRASENIA_EXPIRADA);
 		}*/ else if (!usuario.getCredencial().equals(credencial)) {
             usuario.setIntentosFallidos(usuario.getIntentosFallidos() + 1);
-            Accion action = entityManager
-                    .createNamedQuery("Accion.byDescripcion", Accion.class)
-                    .setParameter("descripcion", Accion.INTENTO_FALLIDO)
-                    .getSingleResult();
-            entityManager.persist(new Bitacora(ip, action, usuario));
+//            Accion action = entityManager
+//                    .createNamedQuery("Accion.byDescripcion", Accion.class)
+//                    .setParameter("descripcion", Accion.INTENTO_FALLIDO)
+//                    .getSingleResult();
+//            entityManager.persist(new Bitacora(ip, action, usuario));
             entityManager.merge(usuario);
             if (usuario.getIntentosFallidos() == 3) {
                 usuario.setEstado(getEstadoPorDescripcion(Estado.BLOQUEADO));
                 Utils.enviarCorreoBloqueo("ES", usuario);
             }
-            return new RespuestaNuevoToken(
-                    CodigoRespuesta.CREDENCIALES_INVALIDAS);
+         
         } else if (usuario.getEstado().getDescripcion()
                 .equals(Estado.PENDIENTE)) {
             return new RespuestaNuevoToken(CodigoRespuesta.USUARIO_PENDIENTE);
@@ -1573,6 +1580,40 @@ public class APIOperations {
         }
         DateTime fechaActual = new DateTime();
         DateTime fechaCredencial = new DateTime(usuario.getCredencialFecha());
+        
+
+    //Aplicar algoritmo a credencial
+        try {
+            credencial = S3cur1ty3Cryt3r.aloEncrpter(credencial, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+            credencial = Utils.MD5(credencial);
+            System.out.println("MD5......................+ :"+ credencial);
+        } catch (NoSuchAlgorithmException ex) {
+            java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+            return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+        } catch (IllegalBlockSizeException ex) {
+            java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+            return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+        } catch (NoSuchPaddingException ex) {
+            java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+            return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+        } catch (BadPaddingException ex) {
+            java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+            return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+        } catch (KeyLongException ex) {
+            java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+            return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+        } catch (Exception ex) {
+            java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+            return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+        }
+ 
+        
 
 //		fechaCredencial = fechaCredencial.plusDays(Integer
 //				.parseInt(diasValidezCredencial.getValorConfiguracion()));
@@ -1624,14 +1665,23 @@ public class APIOperations {
         String token = UUID.randomUUID().toString();
         sesion.setToken(token);
         System.out.println("token: " + token);
+        
+        
+
+        entityManager.flush();
+  
         Accion action = entityManager
                 .createNamedQuery("Accion.byDescripcion", Accion.class)
                 .setParameter("descripcion", Accion.LOGIN).getSingleResult();
-        entityManager.persist(new Bitacora(ip, action, usuario));
-        entityManager.persist(sesion);
-        entityManager.merge(usuario);
-        APIAlodigaWalletProxy alodigaWalletProxy = new APIAlodigaWalletProxy();
         
+        entityManager.persist(new Bitacora(ip, action, usuario));
+        
+        entityManager.persist(sesion);
+
+        entityManager.merge(usuario);
+  
+        
+        APIAlodigaWalletProxy alodigaWalletProxy = new APIAlodigaWalletProxy();
         ProductListResponse productListResponse;
         try {            
             productListResponse = alodigaWalletProxy.getProductsByUserId(String.valueOf(usuario.getUsuarioId()));
@@ -1640,13 +1690,23 @@ public class APIOperations {
         }
         List<RespuestaListadoProducto> respuestaListadoProductos = new ArrayList<RespuestaListadoProducto>();        
         for (Product p : productListResponse.getProducts()) {
-            respuestaListadoProductos.add(new RespuestaListadoProducto(p.getCurrentBalance(), p.getName()));
-        }
-        
+             BalanceHistoryResponse balanceHistoryResponse = new BalanceHistoryResponse();
+             Float currentBalanceProduct = 0F;
+            try {
+                balanceHistoryResponse = alodigaWalletProxy.getBalanceHistoryByProductAndUser(Long.valueOf(usuario.getUsuarioId()), p.getId());
+                if(balanceHistoryResponse.getCodigoRespuesta().equals(Constante.NOT_BALANCE_HISTORY_AVAILABLE_CODE)){
+                    //No tiene producto asociado
+                    currentBalanceProduct = 0F;
+                }else{
+                    currentBalanceProduct = balanceHistoryResponse.getResponse().getCurrentAmount();
+                }
+            } catch (RemoteException ex) {
+                return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+            }         
+            respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(),currentBalanceProduct, p.getName(),p.getSimbol()));                  
+        }     
         usuario.setRespuestaListadoProductos(respuestaListadoProductos);
-//		return new RespuestaNuevoToken(CodigoRespuesta.EXITO,
-//				CodigoRespuesta.EXITO.name(), token);
-
+        
         return new RespuestaUsuario(CodigoRespuesta.EXITO, CodigoRespuesta.EXITO.name(), usuario);
         
     }
@@ -2895,36 +2955,176 @@ public class APIOperations {
                 CodigoRespuesta.EXITO.name(), token);
     }
     
+    
+    public Respuesta validarPinTransaccion(String usuarioApi, String passwordApi,
+            Long usuarioId, String pin) {
+        if (validarUsuario(usuarioApi, passwordApi)) {
+            Usuario usuario = new Usuario();
+            usuario = entityManager.find(Usuario.class, usuarioId);
+            try {
+                String value = S3cur1ty3Cryt3r.aloEncrpter(pin, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+                if (Utils.MD5(value).equals(usuario.getPin())) {
+                    return new Respuesta(CodigoRespuesta.EXITO);
+                }
+            } catch (NoSuchAlgorithmException ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return new Respuesta(CodigoRespuesta.EXITO);
+            } catch (IllegalBlockSizeException ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return new Respuesta(CodigoRespuesta.EXITO);
+            } catch (NoSuchPaddingException ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return new Respuesta(CodigoRespuesta.EXITO);
+            } catch (BadPaddingException ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return new Respuesta(CodigoRespuesta.EXITO);
+            } catch (KeyLongException ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return new Respuesta(CodigoRespuesta.EXITO);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return new Respuesta(CodigoRespuesta.EXITO);
+            }
+            return new Respuesta(CodigoRespuesta.CREDENCIALES_INVALIDAS);
+        } else {
+            return new Respuesta(CodigoRespuesta.ERROR_CREDENCIALES);
+        }
+    }
+    
+    
+     public String testEncript(String usuarioApi, String passwordApi,
+             String textValue) {
+        if (validarUsuario(usuarioApi, passwordApi)) {
+            
+            try {
+                String value = S3cur1ty3Cryt3r.aloDesencript(textValue, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+                return  value;
+            } catch (NoSuchAlgorithmException ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return  "error";
+            } catch (IllegalBlockSizeException ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return  "error";
+            } catch (NoSuchPaddingException ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return  "error";
+            } catch (BadPaddingException ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return  "error";
+            } catch (KeyLongException ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return  "error";
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return  "error";
+            }
+         
+        } else {
+            return  "error";
+        }
+    }
+     
+      public String testDesencript(String usuarioApi, String passwordApi,
+             String textValue) {
+        if (validarUsuario(usuarioApi, passwordApi)) {
+            
+            try {
+                String value = S3cur1ty3Cryt3r.aloEncrpter(textValue, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+                return  value;
+            } catch (NoSuchAlgorithmException ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return  "error";
+            } catch (IllegalBlockSizeException ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return  "error";
+            } catch (NoSuchPaddingException ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return  "error";
+            } catch (BadPaddingException ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return  "error";
+            } catch (KeyLongException ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return  "error";
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return  "error";
+            }
+         
+        } else {
+            return  "error";
+        }
+    }
+     
+    
+    
+              
+    
     public void sendmailTest() {
         
         Usuario usuario = new Usuario();
+        usuario.setNombre("Kerwin");
+        usuario.setApellido("Gomez");
+        usuario.setCredencial("DAnye");
+        usuario.setEmail("mgraterol@alodiga.com");
+        usuario.setMovil("584241934005");
+        Transaction transaction = new Transaction();
+        transaction.setId(1412L);
+        transaction.getTotalAmount();
+        transaction.setTotalAmount(Float.valueOf("2"));
+        Mail mail = Utils.enviarCorreUsuarioCambioContraseña("ES", usuario);
+        System.out.println("body: " + mail.getBody());
+                try {
+            AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
+            //Envio de Correo Electronico
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    
+    
+    
+    
+    
+    
+    public static void main(String[] args) {
         
-        usuario.setNombre("top");
-        usuario.setEmail("kerwin2821@gmail.com");
-        usuario.setApellido("Apellidos");
         
+        Usuario usuario = new Usuario();
+        usuario.setNombre("Kerwin");
+        usuario.setApellido("Gomez");
+        usuario.setCredencial("231231231");
+        usuario.setEmail("mgraterol@alodiga.com");
+        usuario.setMovil("584241934005");
+        Cuenta cunCuenta = new Cuenta();
+        cunCuenta.setNumeroCuenta("01050614154515461528");
+        usuario.setCuenta(cunCuenta);
         Mail mail = Utils.enviarCorreUsuarioNuevoAplicacionMovil("ES", usuario);
-        try {
+                try {
             AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
             //Envio de Correo Electronico
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         
-    }
-    
-    public static void main(String[] args) {
-        
-        Usuario usuario = new Usuario();
-        Transaction transaction = new Transaction();
-        usuario.setNombre("Moises");
-        usuario.setEmail("kerwin2821@gmail.com");
-        usuario.setApellido("Graterol");
-        usuario.setMovil("04125992035");
-        transaction.setId(2L);
-        transaction.setTotalAmount(Float.valueOf("100"));
-        
-        System.out.println(Utils.enviarCorreUsuarioRetiro("ES", usuario, transaction, 2F, 4F).getBody());        
         
     }
     

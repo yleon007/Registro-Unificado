@@ -121,5 +121,9 @@ public class Constante {
         public static final int SEND_TYPE_EMAIL_CHANGE_PASSWORD = 5;
         
         
+        //RESPONSE WEB SERVICES ALODIGA WALLET
+        public static final String NOT_BALANCE_HISTORY_AVAILABLE_CODE = "27";
+        
+        
 
 }

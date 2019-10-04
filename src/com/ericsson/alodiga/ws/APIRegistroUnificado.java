@@ -687,8 +687,35 @@ public class APIRegistroUnificado {
                 codigoValidacionMovil, null,b,"http://llamadas.alodiga.com/site/welcome",true);
 
     }
- 
     
+    
+    @WebMethod
+    public Respuesta validatePinByTransactionOperation(
+            @WebParam(name = "usuarioApi") String usuarioApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "usuarioId") Long usuarioId,
+            @WebParam(name = "pin") String pin) {
+        return operations.validarPinTransaccion(usuarioApi, passwordApi, usuarioId,
+                pin);
+    }
+    
+    
+    @WebMethod
+    public String testEcnript(
+            @WebParam(name = "usuarioApi") String usuarioApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "textValue") String textValue) {
+        return operations.testEncript(usuarioApi, passwordApi,textValue);
+    }
+    
+    @WebMethod
+    public String testDesEcnript(
+            @WebParam(name = "usuarioApi") String usuarioApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "textValue") String textValue) {
+        return operations.testDesencript(usuarioApi, passwordApi,textValue);
+    }
+
     
     @WebMethod
     public void sendMailTest()

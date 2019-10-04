@@ -68,9 +68,8 @@ public class Usuario implements Serializable {
     private String apellido;
 
     @XmlElement(name = "credencial")
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 10000)
     @NotNull(message = "{null.password}")
-    @Pattern(regexp = "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{6,}", message = "{invalid.password}")
     private String credencial;
 
     @XmlElement(name = "credencialFecha")

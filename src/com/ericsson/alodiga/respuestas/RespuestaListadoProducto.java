@@ -10,13 +10,16 @@ package com.ericsson.alodiga.respuestas;
  * @author ltoro
  */
 public class RespuestaListadoProducto {
-    
+    private Long id;
     private Float saldoActual;
-    private String NombreProducto;
+    private String nombreProducto;
+    private String simbolo;
 
-        public RespuestaListadoProducto(Float saldoActual, String NombreProducto) {
+        public RespuestaListadoProducto(Long id, Float saldoActual, String nombreProducto,String simbolo) {
         this.saldoActual = saldoActual;
-        this.NombreProducto = NombreProducto;
+        this.nombreProducto = nombreProducto;
+        this.simbolo = simbolo;
+        this.id = id;
     }
     
     
@@ -28,12 +31,30 @@ public class RespuestaListadoProducto {
         this.saldoActual = saldoActual;
     }
 
-    public String getNombreProducto() {
-        return NombreProducto;
+    public Long getId() {
+        return id;
     }
 
-    public void setNombreProducto(String NombreProducto) {
-        this.NombreProducto = NombreProducto;
+    public void setId(Long id) {
+        this.id = id;
     }
+
+    public String getNombreProducto() {
+        return nombreProducto;
+    }
+
+    public void setNombreProducto(String nombreProducto) {
+        this.nombreProducto = nombreProducto;
+    }
+
+    public String getSimbolo() {
+        return simbolo;
+    }
+
+    public void setSimbolo(String simbolo) {
+        this.simbolo = simbolo;
+    }
+
+    
 
 }

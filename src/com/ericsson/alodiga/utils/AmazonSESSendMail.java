@@ -89,7 +89,7 @@ public class AmazonSESSendMail {
             System.out.println("Sending...");
             
             // Connect to Amazon SES using the SMTP username and password you specified above.
-            transport.connect(HOST, SMTP_USERNAME, SMTP_PASSWORD);
+                transport.connect(HOST, SMTP_USERNAME, SMTP_PASSWORD);
         	
             // Send the email.
             transport.sendMessage(msg, msg.getAllRecipients());
