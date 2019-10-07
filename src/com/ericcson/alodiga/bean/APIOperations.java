@@ -94,6 +94,7 @@ import com.ericsson.alodiga.utils.SendCallRegister;
 import com.ericsson.alodiga.utils.SendMailTherad;
 import com.ericsson.alodiga.utils.SendSmsRegister;
 import com.ericsson.alodiga.utils.Utils;
+import java.io.UnsupportedEncodingException;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
@@ -2955,48 +2956,7 @@ public class APIOperations {
                 CodigoRespuesta.EXITO.name(), token);
     }
     
-    
-    public Respuesta validarPinTransaccion(String usuarioApi, String passwordApi,
-            Long usuarioId, String pin) {
-        if (validarUsuario(usuarioApi, passwordApi)) {
-            Usuario usuario = new Usuario();
-            usuario = entityManager.find(Usuario.class, usuarioId);
-            try {
-                String value = S3cur1ty3Cryt3r.aloEncrpter(pin, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
-                if (Utils.MD5(value).equals(usuario.getPin())) {
-                    return new Respuesta(CodigoRespuesta.EXITO);
-                }
-            } catch (NoSuchAlgorithmException ex) {
-                ex.printStackTrace();
-                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return new Respuesta(CodigoRespuesta.EXITO);
-            } catch (IllegalBlockSizeException ex) {
-                ex.printStackTrace();
-                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return new Respuesta(CodigoRespuesta.EXITO);
-            } catch (NoSuchPaddingException ex) {
-                ex.printStackTrace();
-                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return new Respuesta(CodigoRespuesta.EXITO);
-            } catch (BadPaddingException ex) {
-                ex.printStackTrace();
-                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return new Respuesta(CodigoRespuesta.EXITO);
-            } catch (KeyLongException ex) {
-                ex.printStackTrace();
-                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return new Respuesta(CodigoRespuesta.EXITO);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return new Respuesta(CodigoRespuesta.EXITO);
-            }
-            return new Respuesta(CodigoRespuesta.CREDENCIALES_INVALIDAS);
-        } else {
-            return new Respuesta(CodigoRespuesta.ERROR_CREDENCIALES);
-        }
-    }
-    
+
     
      public String testEncript(String usuarioApi, String passwordApi,
              String textValue) {
@@ -3073,9 +3033,53 @@ public class APIOperations {
             return  "error";
         }
     }
-     
-    
-    
+      
+      
+      public RespuestaUsuario validarPin(String usuarioApi,
+            String passwordApi, Integer usuarioId, String clave) {
+        if (validarUsuario(usuarioApi, passwordApi)) {
+            try {
+                String claveOperacionesCifrada = "";
+                claveOperacionesCifrada = S3cur1ty3Cryt3r.aloEncrpter(clave, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+                claveOperacionesCifrada = Utils.MD5(claveOperacionesCifrada);
+                //Usuario a comparar
+                Usuario usuario = entityManager.find(Usuario.class,usuarioId);
+                if (!usuario.getPin().equals(claveOperacionesCifrada)) {
+                      return new RespuestaUsuario(CodigoRespuesta.PIN_INVALIDO);
+                }else{
+                      return new RespuestaUsuario(CodigoRespuesta.EXITO);
+                }
+            } catch (NoSuchAlgorithmException ex) {
+                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                 return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+            }catch (NoResultException ex) {
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+            } 
+            catch (UnsupportedEncodingException ex) {
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+            } catch (IllegalBlockSizeException ex) {
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+            } catch (NoSuchPaddingException ex) {
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+            } catch (BadPaddingException ex) {
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+            } catch (KeyLongException ex) {
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+            } catch (Exception ex) {
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+            }
+        } else {
+            return new RespuestaUsuario(CodigoRespuesta.ERROR_CREDENCIALES);
+        }
+    }
+
               
     
     public void sendmailTest() {

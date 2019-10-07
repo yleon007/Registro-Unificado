@@ -688,15 +688,15 @@ public class APIRegistroUnificado {
 
     }
     
+
     
-    @WebMethod
-    public Respuesta validatePinByTransactionOperation(
+        @WebMethod
+    public RespuestaUsuario validarPin(
             @WebParam(name = "usuarioApi") String usuarioApi,
             @WebParam(name = "passwordApi") String passwordApi,
-            @WebParam(name = "usuarioId") Long usuarioId,
+            @WebParam(name = "usuarioId") Integer usuarioId,
             @WebParam(name = "pin") String pin) {
-        return operations.validarPinTransaccion(usuarioApi, passwordApi, usuarioId,
-                pin);
+        return operations.validarPin(usuarioApi, passwordApi, usuarioId,pin);
     }
     
     
