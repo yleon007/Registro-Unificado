@@ -3079,6 +3079,47 @@ public class APIOperations {
             return new RespuestaUsuario(CodigoRespuesta.ERROR_CREDENCIALES);
         }
     }
+      
+    public RespuestaUsuario listadoProductosPorUsuario(String usuarioApi, String passwordApi, Integer usuarioId) {
+        if (validarUsuario(usuarioApi, passwordApi)) {
+            try {
+            Usuario usuario = entityManager.find(Usuario.class, usuarioId);
+            APIAlodigaWalletProxy alodigaWalletProxy = new APIAlodigaWalletProxy();
+            ProductListResponse productListResponse;
+            try {
+                productListResponse = alodigaWalletProxy.getProductsByUserId(String.valueOf(usuarioId));
+            } catch (RemoteException ex) {
+                return new RespuestaUsuario(CodigoRespuesta.EXITO);
+            }
+            List<RespuestaListadoProducto> respuestaListadoProductos = new ArrayList<RespuestaListadoProducto>();
+            for (Product p : productListResponse.getProducts()) {
+                BalanceHistoryResponse balanceHistoryResponse = new BalanceHistoryResponse();
+                Float currentBalanceProduct = 0F;
+                try {
+                    balanceHistoryResponse = alodigaWalletProxy.getBalanceHistoryByProductAndUser(Long.valueOf(usuarioId), p.getId());
+                    if (balanceHistoryResponse.getCodigoRespuesta().equals(Constante.NOT_BALANCE_HISTORY_AVAILABLE_CODE)) {
+                        //No tiene producto asociado
+                        currentBalanceProduct = 0F;
+                    } else {
+                        currentBalanceProduct = balanceHistoryResponse.getResponse().getCurrentAmount();
+                    }
+                } catch (RemoteException ex) {
+                    return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+                }
+                respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSimbol()));
+            }
+            usuario.setRespuestaListadoProductos(respuestaListadoProductos);
+            return new RespuestaUsuario(CodigoRespuesta.EXITO, CodigoRespuesta.EXITO.name(), usuario); 
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+            }
+           
+        } else {
+            return new RespuestaUsuario(CodigoRespuesta.ERROR_CREDENCIALES);
+        }
+
+    }
 
               
     
