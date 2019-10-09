@@ -1,7 +1,6 @@
 package com.ericcson.alodiga.bean;
 
-import com.alodiga.security.encryption.S3cur1ty3Cryt3r;
-import com.alodiga.security.exception.KeyLongException;
+
 import com.alodiga.wallet.ws.APIAlodigaWalletProxy;
 import com.alodiga.wallet.ws.BalanceHistoryResponse;
 import com.alodiga.wallet.ws.Product;
@@ -94,6 +93,8 @@ import com.ericsson.alodiga.utils.SendCallRegister;
 import com.ericsson.alodiga.utils.SendMailTherad;
 import com.ericsson.alodiga.utils.SendSmsRegister;
 import com.ericsson.alodiga.utils.Utils;
+import com.ericsson.alodiga.utils.encrypt.KeyLongException;
+import com.ericsson.alodiga.utils.encrypt.S3cur1ty3Cryt3r;
 import java.io.UnsupportedEncodingException;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
@@ -1687,6 +1688,7 @@ public class APIOperations {
         try {            
             productListResponse = alodigaWalletProxy.getProductsByUserId(String.valueOf(usuario.getUsuarioId()));
         } catch (RemoteException ex) {
+            ex.printStackTrace();
             return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
         }
         List<RespuestaListadoProducto> respuestaListadoProductos = new ArrayList<RespuestaListadoProducto>();        
@@ -1704,7 +1706,7 @@ public class APIOperations {
             } catch (RemoteException ex) {
                 return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
             }         
-            respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(),currentBalanceProduct, p.getName(),p.getSimbol()));                  
+            respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(),currentBalanceProduct, p.getName(),p.getSymbol()));                  
         }     
         usuario.setRespuestaListadoProductos(respuestaListadoProductos);
         
@@ -3106,7 +3108,7 @@ public class APIOperations {
                 } catch (RemoteException ex) {
                     return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
                 }
-                respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSimbol()));
+                respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSymbol()));
             }
             usuario.setRespuestaListadoProductos(respuestaListadoProductos);
             return new RespuestaUsuario(CodigoRespuesta.EXITO, CodigoRespuesta.EXITO.name(), usuario); 
