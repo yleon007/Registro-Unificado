@@ -117,6 +117,8 @@ public class APIOperations {
     
     private static final Logger logger = Logger.getLogger(APIOperations.class);
     
+    
+    //PRUEBA
     private boolean validarUsuario(String usuario, String password) {
         UsuarioWS usuarioWS = entityManager
                 .createNamedQuery("UsuarioWS.findUserAndPassword",
