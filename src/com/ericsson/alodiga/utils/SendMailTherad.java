@@ -48,49 +48,29 @@ public class SendMailTherad extends Thread {
               
         
     }
-    //Compra de saldo
-    public SendMailTherad(String idioma, Usuario usuario, Transaction transaction, Float oldAmount, Float currentAmount, Integer sendType) {
-    
-      this.idioma = idioma;
-      this.usuario = usuario;      
-      this.transaction = transaction;
-      this.oldAmount = oldAmount;
-      this.currentAmount = currentAmount; 
-      this.sendType = sendType;
-        
-        
-    }
-    
+
  
 
     public void run() {
       Mail mail = null; 
         switch (sendType) {
-            case Constante.SEND_TYPE_EMAIL_COMPRA:
-                // code block
-                mail = Utils.enviarCorreUsuarioCompraSaldo("ES", usuario, transaction, oldAmount, currentAmount);
-                break;
-            case Constante.SEND_TYPE_EMAIL_RECHARGE:
-                // code block
-                mail = Utils.enviarCorreUsuarioRetiro("ES", usuario, transaction, oldAmount, currentAmount);
-                break;
+            
+            
             case Constante.SEND_TYPE_EMAIL_REGISTER:
             // code block
                 mail = Utils.enviarCorreUsuarioNuevoAplicacionMovil("ES", usuario);
                 break;                
-            case Constante.SEND_TYPE_EMAIL_CHANGE_PASSWORD:
-            // code block
-                mail = Utils.enviarCorreUsuarioCambioContraseña("ES", usuario);
-                break;
-            case Constante.SEND_TYPE_EMAIL_COMERCE_PEYMENT:
-            // code block
-                mail = Utils.enviarCorreUsuarioPagoComercio("ES", usuario, transaction, oldAmount, currentAmount);
-                break;
+            
         }
         
         // Hace el envio
         try {
-            AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
+            //Esto es para hacer el envio con Servidor smtp de alodiga
+              EnvioCorreo.enviarCorreoHtml(new String[]{ mail.getTo().get(0)},
+                mail.getSubject(), mail.getBody(), Utils.obtienePropiedad("mail.user"), null);
+            
+            //Esto es para hacer el envio con Servidor smtp de amazon
+            //AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
         } catch (Exception ex) {
             ex.printStackTrace();
             Logger.getLogger(SendMailTherad.class.getName()).log(Level.SEVERE, null, ex);

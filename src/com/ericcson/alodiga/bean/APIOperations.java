@@ -88,6 +88,7 @@ import com.ericsson.alodiga.utils.AmazonSESSendMail;
 import com.ericsson.alodiga.utils.Conexion;
 import com.ericsson.alodiga.utils.Constante;
 import com.ericsson.alodiga.utils.Encryptor;
+import com.ericsson.alodiga.utils.EnvioCorreo;
 import com.ericsson.alodiga.utils.Mail;
 import com.ericsson.alodiga.utils.SendCallRegister;
 import com.ericsson.alodiga.utils.SendMailTherad;
@@ -3133,16 +3134,25 @@ public class APIOperations {
         usuario.setNombre("Kerwin");
         usuario.setApellido("Gomez");
         usuario.setCredencial("DAnye");
-        usuario.setEmail("mgraterol@alodiga.com");
+        usuario.setEmail("moisegrat12@gmail.com");
         usuario.setMovil("584241934005");
+        Cuenta cunCuenta = new Cuenta();
+        cunCuenta.setNumeroCuenta("01050614154515461528");
+        usuario.setCuenta(cunCuenta);
         Transaction transaction = new Transaction();
         transaction.setId(1412L);
+        transaction.getId();
         transaction.getTotalAmount();
         transaction.setTotalAmount(Float.valueOf("2"));
-        Mail mail = Utils.enviarCorreUsuarioCambioContraseña("ES", usuario);
+      
+        Mail mail = Utils.enviarCorreUsuarioNuevoAplicacionMovil("ES", usuario);
         System.out.println("body: " + mail.getBody());
                 try {
-            AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
+                    
+                    EnvioCorreo.enviarCorreoHtml(new String[]{mail.getTo().get(0)},
+                mail.getSubject(),  mail.getBody(), Utils.obtienePropiedad("mail.user"), null);
+                    
+            //AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
             //Envio de Correo Electronico
         } catch (Exception ex) {
             ex.printStackTrace();

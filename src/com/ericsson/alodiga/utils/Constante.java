@@ -115,10 +115,7 @@ public class Constante {
         
         // constantes SendTypeEmail
 	public static final int SEND_TYPE_EMAIL_REGISTER = 1;
-        public static final int SEND_TYPE_EMAIL_COMPRA = 2;
-        public static final int SEND_TYPE_EMAIL_COMERCE_PEYMENT = 3;
-        public static final int SEND_TYPE_EMAIL_RECHARGE = 4;
-        public static final int SEND_TYPE_EMAIL_CHANGE_PASSWORD = 5;
+        
         
         
         //RESPONSE WEB SERVICES ALODIGA WALLET
