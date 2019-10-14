@@ -584,11 +584,13 @@ public class APIOperations {
                 logger.debug("direccion1: --->" + direccion1);
                 logger.debug("cuenta: --->" + cuenta);
                 
-                if (usuarioId == null) {
+                if (usuarioId == null || usuarioId.equals("")) {
                     
                     try {
                         entityManager.persist(usuario);
                         System.out.println("paso el persis");
+                         //Envio de Correo Electronico
+                    
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -600,19 +602,18 @@ public class APIOperations {
 //                    //Envio de Correo Electronico  
 //                    Mail mail = Utils.enviarCorreUsuarioNuevoAplicacionMovil("ES", usuario);
 //                    AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
-                    //Envio de Correo Electronico
-                    SendMailTherad sendMailTherad = new SendMailTherad("ES", usuario, Integer.valueOf("1"));
-                    sendMailTherad.run();
-                    usuario.setEmail(email);
+                   
                     
                 } else {
                     entityManager.merge(usuario);
                 }
                 entityManager.flush();
-                System.out.println("usuario........" + usuario.getUsuarioId());
+                    System.out.println("usuario........" + usuario.getUsuarioId());
                 APIAlodigaWalletProxy alodigaWalletProxy = new APIAlodigaWalletProxy();
                 alodigaWalletProxy.saveUserHasProductDefault(String.valueOf(usuario.getUsuarioId()));
-                
+                SendMailTherad sendMailTherad = new SendMailTherad("ES", usuario, Integer.valueOf("1"));
+                    sendMailTherad.run();
+                    usuario.setEmail(email);
                 return new RespuestaGuardarUsuario(CodigoRespuesta.EXITO,
                         CodigoRespuesta.EXITO.name(), usuario);
                 
@@ -1658,6 +1659,35 @@ public class APIOperations {
         
         if (usuario.getPreguntaSecretas() == null
                 || usuario.getPreguntaSecretas().isEmpty()) {
+            
+            
+        APIAlodigaWalletProxy alodigaWalletProxy = new APIAlodigaWalletProxy();
+        ProductListResponse productListResponse;
+        try {            
+            productListResponse = alodigaWalletProxy.getProductsByUserId(String.valueOf(usuario.getUsuarioId()));
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+        }
+        List<RespuestaListadoProducto> respuestaListadoProductos = new ArrayList<RespuestaListadoProducto>();        
+        for (Product p : productListResponse.getProducts()) {
+             BalanceHistoryResponse balanceHistoryResponse = new BalanceHistoryResponse();
+             Float currentBalanceProduct = 0F;
+            try {
+                balanceHistoryResponse = alodigaWalletProxy.getBalanceHistoryByProductAndUser(Long.valueOf(usuario.getUsuarioId()), p.getId());
+                if(balanceHistoryResponse.getCodigoRespuesta().equals(Constante.NOT_BALANCE_HISTORY_AVAILABLE_CODE)){
+                    //No tiene producto asociado
+                    currentBalanceProduct = 0F;
+                }else{
+                    currentBalanceProduct = balanceHistoryResponse.getResponse().getCurrentAmount();
+                }
+            } catch (RemoteException ex) {
+                return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+            }         
+            respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(),currentBalanceProduct, p.getName(),p.getSymbol()));                  
+        }     
+        usuario.setRespuestaListadoProductos(respuestaListadoProductos);
+            
             return new RespuestaUsuario(CodigoRespuesta.PRIMER_INGRESO, CodigoRespuesta.PRIMER_INGRESO.name(), usuario);
         }
         
