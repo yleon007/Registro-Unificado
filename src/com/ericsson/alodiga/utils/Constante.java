@@ -117,6 +117,9 @@ public class Constante {
 	public static final int SEND_TYPE_EMAIL_REGISTER = 1;
         
         
+        // constantes SendSmsType
+	public static final int SEND_TYPE_SMS_REGISTER = 1;
+        
         
         //RESPONSE WEB SERVICES ALODIGA WALLET
         public static final String NOT_BALANCE_HISTORY_AVAILABLE_CODE = "27";

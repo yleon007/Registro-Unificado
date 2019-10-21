@@ -731,6 +731,12 @@ public class APIRegistroUnificado {
          operations.sendmailTest();
     }
     
+    @WebMethod
+    public void sendSmsTest()
+            {
+         operations.sendSmsTest();
+    }
+    
     
     
     

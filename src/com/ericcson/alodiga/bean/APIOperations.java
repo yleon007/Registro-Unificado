@@ -1,6 +1,7 @@
 package com.ericcson.alodiga.bean;
 
 
+import com.alodiga.twilio.sms.services.TwilioSmsSenderProxy;
 import com.alodiga.wallet.ws.APIAlodigaWalletProxy;
 import com.alodiga.wallet.ws.BalanceHistoryResponse;
 import com.alodiga.wallet.ws.Product;
@@ -93,12 +94,14 @@ import com.ericsson.alodiga.utils.Mail;
 import com.ericsson.alodiga.utils.SendCallRegister;
 import com.ericsson.alodiga.utils.SendMailTherad;
 import com.ericsson.alodiga.utils.SendSmsRegister;
+import com.ericsson.alodiga.utils.SendSmsThread;
 import com.ericsson.alodiga.utils.Utils;
 import com.ericsson.alodiga.utils.encrypt.KeyLongException;
 import com.ericsson.alodiga.utils.encrypt.S3cur1ty3Cryt3r;
 import java.io.UnsupportedEncodingException;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
 import java.util.logging.Level;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -613,6 +616,9 @@ public class APIOperations {
                 alodigaWalletProxy.saveUserHasProductDefault(String.valueOf(usuario.getUsuarioId()));
                 SendMailTherad sendMailTherad = new SendMailTherad("ES", usuario, Integer.valueOf("1"));
                     sendMailTherad.run();
+                    
+                SendSmsThread sendSmsThread = new SendSmsThread(movil, usuario,Integer.valueOf("1"));
+                sendSmsThread.run();
                     usuario.setEmail(email);
                 return new RespuestaGuardarUsuario(CodigoRespuesta.EXITO,
                         CodigoRespuesta.EXITO.name(), usuario);
@@ -3190,8 +3196,36 @@ public class APIOperations {
     }
     
     
+    public void sendSmsTest() {
+        String message = null;
+        Usuario usuario = new Usuario();
+        usuario.setNombre("Kerwin");
+        usuario.setApellido("Gomez");
+        usuario.setCredencial("DAnye");
+        usuario.setEmail("moisegrat12@gmail.com");
+        usuario.setMovil("12082624868");
+      
+        
+       message = getLangujeByPhoneNumber(usuario.getMovil()).equals(Constante.SPANISH_LANGUAGE) ? "Billetera Alodiga, Usted se ha registrado satisfactoriamente: " + new Timestamp(new java.util.Date().getTime()) + " " +  usuario.getEmail() : "Alodiga Wallet, You have successfully registered: " + new Timestamp(new java.util.Date().getTime()) + " " + usuario.getEmail() ;
+        
+                try {
+            //String message = getLangujeByPhoneNumber(movil).equals(Constante.SPANISH_LANGUAGE) ? "Billetera Alodiga, Su codigo de seguridad para el registro es: " + codigo : "Alodiga Wallet, Your security code is: " + codigo ;
+            TwilioSmsSenderProxy proxy = new TwilioSmsSenderProxy();
+            proxy.sendTwilioSMS(usuario.getMovil(), message);
+
+        } catch (RemoteException ex) {
+           ex.printStackTrace();
+        }
+    }
     
     
+    private Long getLangujeByPhoneNumber(String phone){
+           if(phone.substring(0, 1).equals("1")){
+               return Constante.ENGLISH_LANGUAGE;
+            }else{
+                return Constante.SPANISH_LANGUAGE; 
+           }
+    }
     
     
     public static void main(String[] args) {
