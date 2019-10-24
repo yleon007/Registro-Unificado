@@ -115,7 +115,7 @@ public class Constante {
         
         // constantes SendTypeEmail
 	public static final int SEND_TYPE_EMAIL_REGISTER = 1;
-        
+        public static final int SEND_RECUPERAR_CONTRASEÑA = 2;
         
         // constantes SendSmsType
 	public static final int SEND_TYPE_SMS_REGISTER = 1;

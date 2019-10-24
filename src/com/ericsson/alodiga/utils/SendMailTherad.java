@@ -59,7 +59,12 @@ public class SendMailTherad extends Thread {
             case Constante.SEND_TYPE_EMAIL_REGISTER:
             // code block
                 mail = Utils.enviarCorreUsuarioNuevoAplicacionMovil("ES", usuario);
-                break;                
+                break;  
+                
+                case Constante.SEND_RECUPERAR_CONTRASEÑA:
+            // code block
+                mail = Utils.enviarCorreRecuperarContraseñaAplicacionMovil("ES", usuario);
+                break;  
             
         }
         

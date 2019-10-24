@@ -3181,7 +3181,7 @@ public class APIOperations {
         transaction.getTotalAmount();
         transaction.setTotalAmount(Float.valueOf("2"));
       
-        Mail mail = Utils.enviarCorreUsuarioNuevoAplicacionMovil("ES", usuario);
+        Mail mail = Utils.enviarCorreRecuperarContraseñaAplicacionMovil("ES", usuario);
         System.out.println("body: " + mail.getBody());
                 try {
                     
@@ -3250,5 +3250,53 @@ public class APIOperations {
         
         
     }
+    
+    
+    public Respuesta recuperarPasswordAplicacionMovil(String usuarioApi, String passwordApi,
+            String email, String nuevacredencial) {
+        if (validarUsuario(usuarioApi, passwordApi)) {
+            if (email == null || email.equals("")) {
+                return new Respuesta(CodigoRespuesta.DATOS_NULOS);
+            }
+            Usuario usuario = getUsuarioporemail(email);
+            if (usuario == null) {
+                return new Respuesta(CodigoRespuesta.USUARIO_NO_EXISTE);
+            }
+
+            String valueCredencial;
+            try {
+                valueCredencial = S3cur1ty3Cryt3r.aloEncrpter(nuevacredencial, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+                usuario.setCredencial(Utils.MD5(valueCredencial));
+                usuario.setCredencialFecha(new Date());
+                entityManager.merge(usuario);
+            } catch (NoSuchAlgorithmException ex) {
+                ex.printStackTrace();
+                return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
+            } catch (IllegalBlockSizeException ex) {
+                ex.printStackTrace();
+                return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
+            } catch (NoSuchPaddingException ex) {
+                ex.printStackTrace();
+                return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
+            } catch (BadPaddingException ex) {
+                ex.printStackTrace();
+                return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
+            } catch (KeyLongException ex) {
+                ex.printStackTrace();
+                return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
+            }
+
+            
+            SendMailTherad sendMailTherad = new SendMailTherad("ES", usuario, Integer.valueOf("2"));
+                    sendMailTherad.run();
+            return new Respuesta(CodigoRespuesta.EXITO);
+        } else {
+            return new Respuesta(CodigoRespuesta.ERROR_CREDENCIALES);
+        }
+    }
+    
     
 }

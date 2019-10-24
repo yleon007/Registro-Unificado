@@ -723,6 +723,16 @@ public class APIRegistroUnificado {
             @WebParam(name = "usuarioId") Integer usuarioId) {
         return operations.listadoProductosPorUsuario(usuarioApi, passwordApi,usuarioId);
     }
+    
+    
+     @WebMethod
+    public Respuesta recuperarPasswordAplicacionMovil(
+            @WebParam(name = "usuarioApi") String usuarioApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "email") String email,
+            @WebParam(name = "nuevacredencial") String nuevacredencial) {
+        return operations.recuperarPasswordAplicacionMovil(usuarioApi, passwordApi, email, nuevacredencial);
+    }
 
     
     @WebMethod
