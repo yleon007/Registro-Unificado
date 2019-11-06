@@ -939,10 +939,8 @@ public class Utils {
     
         
     public static Boolean EsNumeroDeTelefono(String value) {
-        try {
-            //Integer valueInt = Integer.valueOf(value.trim());
-            
-            return (value.matches("[+-]?\\d*(\\.\\d+)?") && value.equals("")==false);
+        try {    
+            return (value.matches("[+]?\\d*") && value.equals("")==false);
         } catch (NumberFormatException e) {
                 
                 return false;
