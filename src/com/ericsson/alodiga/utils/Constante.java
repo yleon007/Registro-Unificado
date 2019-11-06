@@ -119,10 +119,27 @@ public class Constante {
         
         // constantes SendSmsType
 	public static final int SEND_TYPE_SMS_REGISTER = 1;
-        
+        public static final int SEND_TYPE_SMS_CODIGO_MOVIL = 2;
+        public static final int SEND_TYPE_SMS_RECUPERAR_CONTRASEÑA = 3;
         
         //RESPONSE WEB SERVICES ALODIGA WALLET
         public static final String NOT_BALANCE_HISTORY_AVAILABLE_CODE = "27";
+        
+        
+        //internat Access Api Operation
+        public static final String USER_API = "usuarioWS";
+        public static final String PASSWORD_API = "passwordWS";
+        
+        //URL SERVCES SIMBOX
+        public static final String URL_SIMBOX = "https://200.73.192.251/api/send_sms";
+        public static final String TYPE_REQUEST_SIMBOX = "POST";
+        public static final String REQUEST_PROPERTIE_CONTENT_TYPE = "Content-Type";
+        public static final String REQUEST_PROPERTIE_CONTENT_TYPE_VALUE = "application/json";
+
+        //CREDENCIAL 
+        public static final String USER_SIMBOX_1 = "admin";
+        public static final String PASSWORD_SIMBOX_1 = "Opextel.2019";
+        
         
         
 

@@ -98,7 +98,17 @@ import com.ericsson.alodiga.utils.SendSmsThread;
 import com.ericsson.alodiga.utils.Utils;
 import com.ericsson.alodiga.utils.encrypt.KeyLongException;
 import com.ericsson.alodiga.utils.encrypt.S3cur1ty3Cryt3r;
+import static com.lexisnexis.bridgerinsight.BridgerInsight_Web_Services_Interfaces_9_0.AssignmentType.User;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.Authenticator;
+import java.net.HttpURLConnection;
+import java.net.InetAddress;
+import java.net.PasswordAuthentication;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
@@ -107,11 +117,15 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.mail.MessagingException;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
 import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec;
 
 @Stateless(name = "FsProcessor", mappedName = "ejb/FsProcessor")
 @TransactionManagement(TransactionManagementType.CONTAINER)
 public class APIOperations {
+    
+    
     
     @PersistenceContext(unitName = "aloDiga")
     private EntityManager entityManager;
@@ -614,9 +628,10 @@ public class APIOperations {
                     System.out.println("usuario........" + usuario.getUsuarioId());
                 APIAlodigaWalletProxy alodigaWalletProxy = new APIAlodigaWalletProxy();
                 alodigaWalletProxy.saveUserHasProductDefault(String.valueOf(usuario.getUsuarioId()));
+                
                 SendMailTherad sendMailTherad = new SendMailTherad("ES", usuario, Integer.valueOf("1"));
                     sendMailTherad.run();
-                    
+                
                 SendSmsThread sendSmsThread = new SendSmsThread(movil, usuario,Integer.valueOf("1"));
                 sendSmsThread.run();
                     usuario.setEmail(email);
@@ -2125,14 +2140,9 @@ public class APIOperations {
                     i++;
                 }
                 MovilCodigo mc = new MovilCodigo(movil, codigo);
-                SendSmsRegister c = new SendSmsRegister(movil, codigo);
-                c.start();
+                SendSmsThread sendSmsThread = new SendSmsThread(movil, codigo, Integer.valueOf("2"));
+                sendSmsThread.start();
 
-                /*Utils.getWsaPort().enviarSMS(
-						Utils.obtienePropiedad("usuarioWSA"),
-						Utils.obtienePropiedad("passwordWSA"),
-						Utils.obtienePropiedad("NUMERO_ENVIO_SMS"), movil,
-						null, codigo, null);*/
                 entityManager.persist(mc);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -3252,20 +3262,38 @@ public class APIOperations {
     }
     
     
-    public Respuesta recuperarPasswordAplicacionMovil(String usuarioApi, String passwordApi,
-            String email, String nuevacredencial) {
+    
+    
+    
+    
+    public Respuesta sendSmsSimbox(String usuarioApi, String passwordApi, String text, String phoneNumber) {
         if (validarUsuario(usuarioApi, passwordApi)) {
-            if (email == null || email.equals("")) {
+            try {
+                 String response = Utils.sendSmsSimbox(text, phoneNumber);
+            } catch (Exception e) {
+                return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
+            }
+            return new Respuesta(CodigoRespuesta.EXITO);
+        } else {
+            return new RespuestaUsuario(CodigoRespuesta.ERROR_CREDENCIALES);
+        }
+    }
+
+
+    public Respuesta cambiarCredencialAplicacionMovil(String usuarioApi, String passwordApi,
+            Integer usuarioId, String credencial) {
+        if (validarUsuario(usuarioApi, passwordApi)) {
+            if (usuarioId == null || usuarioId == 0) {
                 return new Respuesta(CodigoRespuesta.DATOS_NULOS);
             }
-            Usuario usuario = getUsuarioporemail(email);
+            
+            Usuario usuario = entityManager.find(Usuario.class, usuarioId);
             if (usuario == null) {
                 return new Respuesta(CodigoRespuesta.USUARIO_NO_EXISTE);
             }
-
             String valueCredencial;
             try {
-                valueCredencial = S3cur1ty3Cryt3r.aloEncrpter(nuevacredencial, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+                valueCredencial = S3cur1ty3Cryt3r.aloEncrpter(credencial, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
                 usuario.setCredencial(Utils.MD5(valueCredencial));
                 usuario.setCredencialFecha(new Date());
                 entityManager.merge(usuario);
@@ -3288,8 +3316,7 @@ public class APIOperations {
                 ex.printStackTrace();
                 return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
             }
-
-            
+            entityManager.merge(usuario);
             SendMailTherad sendMailTherad = new SendMailTherad("ES", usuario, Integer.valueOf("2"));
                     sendMailTherad.run();
             return new Respuesta(CodigoRespuesta.EXITO);
@@ -3299,4 +3326,92 @@ public class APIOperations {
     }
     
     
+     public RespuestaCodigoRandom generarCodigoMovilSMSAplicacionMovil(String usuarioApi,
+            String passwordApi, String phoneNumber, String email) {
+        if (validarUsuario(usuarioApi, passwordApi)) { 
+            String codigo = "";
+            try {
+                Random r = new Random();
+                int i = 0;
+                while (i < 6) {
+                    codigo += "" + r.nextInt(10);
+                    i++;
+                }            
+                Usuario usuario = getLoginUsuario(email, phoneNumber);      
+                MovilCodigo mc;
+                try {
+                     mc = new MovilCodigo(usuario.getMovil(), codigo);
+                } catch (NullPointerException e) {
+                         return new RespuestaCodigoRandom(CodigoRespuesta.USUARIO_NO_EXISTE,
+                        e.getLocalizedMessage());
+                }
+                SendSmsThread sendSmsThread = new SendSmsThread(usuario.getMovil(), codigo, Integer.valueOf("3"));
+                sendSmsThread.start();
+
+                entityManager.persist(mc);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new RespuestaCodigoRandom(CodigoRespuesta.ERROR_INTERNO,
+                        e.getLocalizedMessage());
+            }
+            return new RespuestaCodigoRandom(CodigoRespuesta.EXITO, "", codigo);
+        } else {
+            return new RespuestaCodigoRandom(CodigoRespuesta.ERROR_CREDENCIALES);
+        }
+    }
+    
+    
+     public Respuesta cambiarCredencialAplicacionMovilEmailOrPhone(String usuarioApi, String passwordApi,
+            String phoneOrEmail, String credencial) {
+        if (validarUsuario(usuarioApi, passwordApi)) {
+           Usuario usuario = null;
+            
+            if (Utils.isStringValido(phoneOrEmail)) {
+                if(Utils.EsNumeroDeTelefono(phoneOrEmail)){
+                   usuario = getUsuariopormovil(phoneOrEmail); 
+                }else{
+                   usuario = getUsuarioporemail(phoneOrEmail);
+                }
+            }
+            if (usuario == null) {
+                return new Respuesta(CodigoRespuesta.USUARIO_NO_EXISTE);
+            }
+            String valueCredencial;
+            try {
+                valueCredencial = S3cur1ty3Cryt3r.aloEncrpter(credencial, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
+                usuario.setCredencial(Utils.MD5(valueCredencial));
+                usuario.setCredencialFecha(new Date());
+                entityManager.merge(usuario);
+            } catch (NoSuchAlgorithmException ex) {
+                ex.printStackTrace();
+                return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
+            } catch (IllegalBlockSizeException ex) {
+                ex.printStackTrace();
+                return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
+            } catch (NoSuchPaddingException ex) {
+                ex.printStackTrace();
+                return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
+            } catch (BadPaddingException ex) {
+                ex.printStackTrace();
+                return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
+            } catch (KeyLongException ex) {
+                ex.printStackTrace();
+                return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
+            }
+            entityManager.merge(usuario);
+            SendMailTherad sendMailTherad = new SendMailTherad("ES", usuario, Integer.valueOf("2"));
+                    sendMailTherad.run();
+            return new Respuesta(CodigoRespuesta.EXITO);
+        } else {
+            return new Respuesta(CodigoRespuesta.ERROR_CREDENCIALES);
+        }
+    }
+     
+     
 }
+    
+    
+

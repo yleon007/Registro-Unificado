@@ -2,6 +2,7 @@ package com.ericsson.alodiga.utils;
 
 
 import com.alodiga.wallet.ws.Transaction;
+import com.ericcson.alodiga.bean.APIOperations;
 import com.ericsson.alodiga.model.Cuenta;
 import java.awt.Color;
 import java.awt.Font;
@@ -23,6 +24,8 @@ import com.ericsson.alodiga.model.Direccion;
 import com.ericsson.alodiga.model.Ocupacion;
 import com.ericsson.alodiga.model.TipoDocumento;
 import com.ericsson.alodiga.model.Usuario;
+import com.ericsson.alodiga.respuestas.CodigoRespuesta;
+import com.ericsson.alodiga.respuestas.Respuesta;
 import com.icon.mw.ws.AloDiga;
 import com.icon.mw.ws.AloDigaServiceLocator;
 import com.lexisnexis.bridgerinsight.BridgerInsight_Web_Services_Interfaces_9_0.AdditionalInfoType;
@@ -48,13 +51,32 @@ import com.lexisnexis.bridgerinsight.BridgerInsight_Web_Services_Interfaces_9_0.
 import com.lexisnexis.bridgerinsight.BridgerInsight_Web_Services_Interfaces_9_0.SearchResults;
 import com.lexisnexis.bridgerinsight.BridgerInsight_Web_Services_Interfaces_9_0.XGServicesLocator;
 import com.mysql.jdbc.BalanceStrategy;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.Authenticator;
+import java.net.HttpURLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
 
 public class Utils {
+    
+    static {
+	    //for localhost testing only
+	    javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
+	    new javax.net.ssl.HostnameVerifier(){
+
+	        public boolean verify(String string, SSLSession ssls) {
+    return true;
+}
+	    });
+	}
 
     private static Properties messages;
     private static Properties validationMessages;
@@ -852,5 +874,89 @@ public class Utils {
         }
         return buf.toString();
     }
+
+    public static String sendSmsSimbox(String text, String phoneNumber) {
+        HttpsURLConnection connection = null;
+        InputStream is = null;
+        try {
+            Authenticator.setDefault(new MyAuthenticator(Constante.USER_SIMBOX_1, Constante.PASSWORD_SIMBOX_1));
+            java.net.URL url = new java.net.URL(Constante.URL_SIMBOX);
+            connection = (HttpsURLConnection) url.openConnection();
+            connection.setRequestMethod(Constante.TYPE_REQUEST_SIMBOX);
+            connection.setRequestProperty(Constante.REQUEST_PROPERTIE_CONTENT_TYPE, Constante.REQUEST_PROPERTIE_CONTENT_TYPE_VALUE);
+            connection.setUseCaches(false);
+            connection.setDoOutput(true);
+            //   REQUEST_PROPERTIE_CONTENT_TYPE_VALUE
+            //Send request
+            DataOutputStream wr = new DataOutputStream(
+                    connection.getOutputStream());
+            wr.writeBytes(getRequestJsonDinstar(text, phoneNumber).toString());
+            wr.close();
+            //Get Response  
+            try {
+                is = connection.getInputStream();
+            } catch (IOException ioe) {
+                if (connection instanceof HttpURLConnection) {
+                    HttpURLConnection httpConn = (HttpURLConnection) connection;
+                    int statusCode = httpConn.getResponseCode();
+                    System.out.println(httpConn.getResponseCode());
+                    System.out.println(statusCode);
+                    if (statusCode != 200) {
+                        is = httpConn.getErrorStream();
+                    }
+                }
+            }
+            BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+            StringBuilder response = new StringBuilder(); // or StringBuffer if Java version 5+
+            String line;
+            while ((line = rd.readLine()) != null) {
+                response.append(line);
+                response.append('\r');
+            }
+            rd.close();
+            return response.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return e.getMessage();
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+    
+    
+    private static StringBuilder getRequestJsonDinstar(String text,String phoneNumber) {
+            StringBuilder builderParam = new StringBuilder();
+            builderParam.append("{\"text\":\"");
+            builderParam.append(text);
+            builderParam.append("\",\"param\":[{\"number\":\"");
+            builderParam.append(phoneNumber);
+            builderParam.append("\"}]}");
+        return builderParam;
+    }
+    
+    
+        
+    public static Boolean EsNumeroDeTelefono(String value) {
+        try {
+            //Integer valueInt = Integer.valueOf(value.trim());
+            
+            return (value.matches("[+-]?\\d*(\\.\\d+)?") && value.equals("")==false);
+        } catch (NumberFormatException e) {
+                
+                return false;
+        }
+   
+    }
+
+
+            
+            
+            
+    
+    
+    
+    
     
 }

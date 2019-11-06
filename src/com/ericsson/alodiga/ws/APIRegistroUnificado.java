@@ -32,15 +32,20 @@ import com.ericsson.alodiga.respuestas.RespuestaPreguntasSecretasUsuario;
 import com.ericsson.alodiga.respuestas.RespuestaToken;
 import com.ericsson.alodiga.respuestas.RespuestaUsuario;
 import java.sql.Timestamp;
+import javax.net.ssl.SSLSession;
 
 @WebService
 public class APIRegistroUnificado {
 
+    
+    
     private static final Logger logger = Logger
             .getLogger(APIRegistroUnificado.class);
 
     @EJB
     private APIOperations operations;
+    
+   
 
     @WebMethod
     public RespuestaListadoAplicaciones getAplicaciones(
@@ -479,6 +484,15 @@ public class APIRegistroUnificado {
         return operations.generarCodigoMovilSMS(usuarioApi, passwordApi, movil);
     }
     
+    @WebMethod
+    public Respuesta generarCodigoMovilSMSAplicacionMovil(
+            @WebParam(name = "usuarioApi") String usuarioApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "movil") String movil, 
+            @WebParam(name = "email") String email) {
+        return operations.generarCodigoMovilSMSAplicacionMovil(usuarioApi, passwordApi, movil,email);
+    }
+    
     
     
     @WebMethod
@@ -724,16 +738,8 @@ public class APIRegistroUnificado {
         return operations.listadoProductosPorUsuario(usuarioApi, passwordApi,usuarioId);
     }
     
-    
-     @WebMethod
-    public Respuesta recuperarPasswordAplicacionMovil(
-            @WebParam(name = "usuarioApi") String usuarioApi,
-            @WebParam(name = "passwordApi") String passwordApi,
-            @WebParam(name = "email") String email,
-            @WebParam(name = "nuevacredencial") String nuevacredencial) {
-        return operations.recuperarPasswordAplicacionMovil(usuarioApi, passwordApi, email, nuevacredencial);
-    }
 
+   
     
     @WebMethod
     public void sendMailTest()
@@ -748,11 +754,37 @@ public class APIRegistroUnificado {
     }
     
     
+        
+    @WebMethod
+    public Respuesta sendSmsSimbox(
+            
+            @WebParam(name = "usuarioApi") String usuarioApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "number") String number,
+            @WebParam(name = "text") String text){
+        return operations.sendSmsSimbox(usuarioApi, passwordApi, number, text);
+    }
     
     
+    @WebMethod
+    public Respuesta cambiarCredencialAplicacionMovil(
+            @WebParam(name = "usuarioApi") String usuarioApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "usuarioId") Integer usuarioId,
+            @WebParam(name = "credencial") String credencial) {
+        return operations.cambiarCredencialAplicacionMovil(usuarioApi, passwordApi, usuarioId,
+                credencial);
+    }
     
-    
-    
+    @WebMethod
+    public Respuesta cambiarCredencialAplicacionMovilEmailOrPhone(
+            @WebParam(name = "usuarioApi") String usuarioApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "phoneOrEmail") String phoneOrEmail,
+            @WebParam(name = "credencial") String credencial) {
+        return operations.cambiarCredencialAplicacionMovilEmailOrPhone(usuarioApi, passwordApi, phoneOrEmail,
+                credencial);
+    }
     
     
 }
