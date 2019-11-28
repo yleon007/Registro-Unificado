@@ -66,9 +66,9 @@ public class SendSmsThread extends Thread {
                 proxy.sendTwilioSMS(movil, message);
             } else if (movil.substring(0, 2).equals("58")) {
                 //Venezuela  integras con simbox
-                APIOperations aPIOperations = new APIOperations();
+                //APIOperations aPIOperations = new APIOperations();
                 try {
-                    aPIOperations.sendSmsSimbox(Constante.USER_API, Constante.PASSWORD_API, message, movil);
+                    //aPIOperations.sendSmsSimbox(Constante.USER_API, Constante.PASSWORD_API, message, movil);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

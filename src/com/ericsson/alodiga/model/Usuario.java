@@ -1,5 +1,6 @@
 package com.ericsson.alodiga.model;
 
+import com.alodiga.wallet.ws.Cumplimient;
 import com.ericsson.alodiga.respuestas.RespuestaListadoProducto;
 import java.io.Serializable;
 import java.util.Date;
@@ -123,6 +124,9 @@ public class Usuario implements Serializable {
 
     @Transient
     private List<RespuestaListadoProducto> respuestaListadoProductos;
+            
+    @Transient
+    private String cumplimient;        
 
     // @XmlTransient
     // @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
@@ -468,4 +472,15 @@ public class Usuario implements Serializable {
         this.respuestaListadoProductos = respuestaListadoProductos;
     }
 
+    public String getCumplimient() {
+        return cumplimient;
+    }
+
+    public void setCumplimient(String cumplimient) {
+        this.cumplimient = cumplimient;
+    }
+
+
+    
+    
 }

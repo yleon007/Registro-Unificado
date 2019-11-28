@@ -14,13 +14,17 @@ public class RespuestaListadoProducto {
     private Float saldoActual;
     private String nombreProducto;
     private String simbolo;
+    private Boolean isPayTopUP;
 
-        public RespuestaListadoProducto(Long id, Float saldoActual, String nombreProducto,String simbolo) {
+        public RespuestaListadoProducto(Long id, Float saldoActual, String nombreProducto,String simbolo,Boolean isPayTopUP) {
         this.saldoActual = saldoActual;
         this.nombreProducto = nombreProducto;
         this.simbolo = simbolo;
         this.id = id;
+        this.isPayTopUP = isPayTopUP;
     }
+
+
     
     
     public Float getSaldoActual() {
@@ -54,6 +58,16 @@ public class RespuestaListadoProducto {
     public void setSimbolo(String simbolo) {
         this.simbolo = simbolo;
     }
+
+    public Boolean getIsPayTopUP() {
+        return isPayTopUP;
+    }
+
+    public void setIsPayTopUP(Boolean isPayTopUP) {
+        this.isPayTopUP = isPayTopUP;
+    }
+    
+    
 
     
 

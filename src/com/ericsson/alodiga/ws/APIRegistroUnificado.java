@@ -702,8 +702,6 @@ public class APIRegistroUnificado {
 
     }
     
-
-    
         @WebMethod
     public RespuestaUsuario validarPin(
             @WebParam(name = "usuarioApi") String usuarioApi,
@@ -738,9 +736,6 @@ public class APIRegistroUnificado {
         return operations.listadoProductosPorUsuario(usuarioApi, passwordApi,usuarioId);
     }
     
-
-   
-    
     @WebMethod
     public void sendMailTest()
             {
@@ -753,8 +748,6 @@ public class APIRegistroUnificado {
          operations.sendSmsTest();
     }
     
-    
-        
     @WebMethod
     public Respuesta sendSmsSimbox(
             

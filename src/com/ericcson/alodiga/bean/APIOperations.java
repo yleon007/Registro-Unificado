@@ -4,6 +4,8 @@ package com.ericcson.alodiga.bean;
 import com.alodiga.twilio.sms.services.TwilioSmsSenderProxy;
 import com.alodiga.wallet.ws.APIAlodigaWalletProxy;
 import com.alodiga.wallet.ws.BalanceHistoryResponse;
+import com.alodiga.wallet.ws.CumplimientListResponse;
+import com.alodiga.wallet.ws.CumplimientResponse;
 import com.alodiga.wallet.ws.Product;
 import com.alodiga.wallet.ws.ProductListResponse;
 import com.alodiga.wallet.ws.Transaction;
@@ -440,7 +442,7 @@ public class APIOperations {
             String fechaNacimiento, String direccion, String paisId,
             String estadoId, String ciudadId, String condadoId,
             String codigoPostal, String codigoValidacionMovil,
-            String nombreImagen, byte[] imagenBytes, String link, String pin, boolean isSocialNetwork) {
+                String nombreImagen, byte[] imagenBytes, String link, String pin, boolean isSocialNetwork) {
         link = "http://llamadas.alodiga.com/site/welcome";
         try {
             if (validarUsuario(usuarioApi, passwordApi)) {
@@ -1587,7 +1589,7 @@ public class APIOperations {
     public RespuestaUsuario loginAplicacionMovil(String usuarioApi, String passwordApi,
             String email, String movil, String credencial, String ip) {
         
-        if (!validarUsuario(usuarioApi, passwordApi)) {
+            if (!validarUsuario(usuarioApi, passwordApi)) {
             return new RespuestaUsuario(CodigoRespuesta.ERROR_CREDENCIALES);
         }
         
@@ -1686,6 +1688,7 @@ public class APIOperations {
         ProductListResponse productListResponse;
         try {            
             productListResponse = alodigaWalletProxy.getProductsByUserId(String.valueOf(usuario.getUsuarioId()));
+        
         } catch (RemoteException ex) {
             ex.printStackTrace();
             return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
@@ -1705,7 +1708,7 @@ public class APIOperations {
             } catch (RemoteException ex) {
                 return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
             }         
-            respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(),currentBalanceProduct, p.getName(),p.getSymbol()));                  
+            respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(),currentBalanceProduct, p.getName(),p.getSymbol(), p.isIsPayTopUp()));                  
         }     
         usuario.setRespuestaListadoProductos(respuestaListadoProductos);
             
@@ -1739,7 +1742,8 @@ public class APIOperations {
         
         APIAlodigaWalletProxy alodigaWalletProxy = new APIAlodigaWalletProxy();
         ProductListResponse productListResponse;
-        try {            
+        
+                try {            
             productListResponse = alodigaWalletProxy.getProductsByUserId(String.valueOf(usuario.getUsuarioId()));
         } catch (RemoteException ex) {
             ex.printStackTrace();
@@ -1760,9 +1764,22 @@ public class APIOperations {
             } catch (RemoteException ex) {
                 return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
             }         
-            respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(),currentBalanceProduct, p.getName(),p.getSymbol()));                  
+            respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(),currentBalanceProduct, p.getName(),p.getSymbol(), p.isIsPayTopUp()));                  
         }     
         usuario.setRespuestaListadoProductos(respuestaListadoProductos);
+        
+        APIAlodigaWalletProxy aPIAlodigaWalletProxy = new APIAlodigaWalletProxy();  
+        CumplimientResponse cumplimientResponse = new CumplimientResponse();
+        try {
+            cumplimientResponse = aPIAlodigaWalletProxy.getCumplimientStatus(String.valueOf(usuario.getUsuarioId()));
+            
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+        }
+        
+        usuario.setCumplimient(cumplimientResponse.getCumplimients().getComplientStatusId().getId().toString());
+        
         
         return new RespuestaUsuario(CodigoRespuesta.EXITO, CodigoRespuesta.EXITO.name(), usuario);
         
@@ -3157,7 +3174,7 @@ public class APIOperations {
                 } catch (RemoteException ex) {
                     return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
                 }
-                respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSymbol()));
+                respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSymbol(), p.isIsPayTopUp()));
             }
             usuario.setRespuestaListadoProductos(respuestaListadoProductos);
             return new RespuestaUsuario(CodigoRespuesta.EXITO, CodigoRespuesta.EXITO.name(), usuario); 
@@ -3194,12 +3211,12 @@ public class APIOperations {
         Mail mail = Utils.enviarCorreRecuperarContraseñaAplicacionMovil("ES", usuario);
         System.out.println("body: " + mail.getBody());
                 try {
+                    //Envio de Correo Electronico
+//                    EnvioCorreo.enviarCorreoHtml(new String[]{mail.getTo().get(0)},
+//                mail.getSubject(),  mail.getBody(), Utils.obtienePropiedad("mail.user"), null);
                     
-                    EnvioCorreo.enviarCorreoHtml(new String[]{mail.getTo().get(0)},
-                mail.getSubject(),  mail.getBody(), Utils.obtienePropiedad("mail.user"), null);
-                    
-            //AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
-            //Envio de Correo Electronico
+            AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
+            
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -3342,8 +3359,7 @@ public class APIOperations {
                 try {
                      mc = new MovilCodigo(usuario.getMovil(), codigo);
                 } catch (NullPointerException e) {
-                         return new RespuestaCodigoRandom(CodigoRespuesta.USUARIO_NO_EXISTE,
-                        e.getLocalizedMessage());
+                         return new RespuestaCodigoRandom(CodigoRespuesta.USUARIO_NO_EXISTE);
                 }
                 SendSmsThread sendSmsThread = new SendSmsThread(usuario.getMovil(), codigo, Integer.valueOf("3"));
                 sendSmsThread.start();
@@ -3351,8 +3367,7 @@ public class APIOperations {
                 entityManager.persist(mc);
             } catch (Exception e) {
                 e.printStackTrace();
-                return new RespuestaCodigoRandom(CodigoRespuesta.ERROR_INTERNO,
-                        e.getLocalizedMessage());
+                return new RespuestaCodigoRandom(CodigoRespuesta.ERROR_INTERNO);
             }
             return new RespuestaCodigoRandom(CodigoRespuesta.EXITO, "", codigo);
         } else {
