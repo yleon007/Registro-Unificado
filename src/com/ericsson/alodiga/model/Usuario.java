@@ -35,6 +35,7 @@ import org.hibernate.validator.constraints.Email;
 
 import com.ericsson.alodiga.validations.CheckAge;
 import javax.persistence.Transient;
+import javax.swing.text.StyledEditorKit;
 
 @XmlRootElement(name = "Usuario")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -128,6 +129,14 @@ public class Usuario implements Serializable {
     @Transient
     private String cumplimient;        
 
+    @Transient
+    private Boolean prepayCardAsociate;
+    
+    @Transient
+    private Boolean prepayCard;
+    
+    @Transient
+    private String numberCard;
     // @XmlTransient
     // @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
     // private List<SesionUsuario> sesionUsuarios;
@@ -478,6 +487,30 @@ public class Usuario implements Serializable {
 
     public void setCumplimient(String cumplimient) {
         this.cumplimient = cumplimient;
+    }
+
+    public Boolean getPrepayCardAsociate() {
+        return prepayCardAsociate;
+    }
+
+    public void setPrepayCardAsociate(Boolean prepayCardAsociate) {
+        this.prepayCardAsociate = prepayCardAsociate;
+    }
+
+    public Boolean getPrepayCard() {
+        return prepayCard;
+    }
+
+    public void setPrepayCard(Boolean prepayCard) {
+        this.prepayCard = prepayCard;
+    }
+
+    public String getNumberCard() {
+        return numberCard;
+    }
+
+    public void setNumberCard(String numberCard) {
+        this.numberCard = numberCard;
     }
 
 

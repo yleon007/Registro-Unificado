@@ -1,9 +1,9 @@
 package com.ericcson.alodiga.bean;
 
-
 import com.alodiga.twilio.sms.services.TwilioSmsSenderProxy;
 import com.alodiga.wallet.ws.APIAlodigaWalletProxy;
 import com.alodiga.wallet.ws.BalanceHistoryResponse;
+import com.alodiga.wallet.ws.CardResponse;
 import com.alodiga.wallet.ws.CumplimientListResponse;
 import com.alodiga.wallet.ws.CumplimientResponse;
 import com.alodiga.wallet.ws.Product;
@@ -77,6 +77,7 @@ import com.ericsson.alodiga.respuestas.RespuestaListadoEmpresa;
 import com.ericsson.alodiga.respuestas.RespuestaListadoEstados;
 import com.ericsson.alodiga.respuestas.RespuestaListadoOcupaciones;
 import com.ericsson.alodiga.respuestas.RespuestaListadoProducto;
+import com.ericsson.alodiga.respuestas.RespuestaListadoTarjeta;
 import com.ericsson.alodiga.respuestas.RespuestaListadoTarjetas;
 import com.ericsson.alodiga.respuestas.RespuestaListadoTipoCuentaBancaria;
 import com.ericsson.alodiga.respuestas.RespuestaListadoTipoDocumento;
@@ -101,6 +102,7 @@ import com.ericsson.alodiga.utils.Utils;
 import com.ericsson.alodiga.utils.encrypt.KeyLongException;
 import com.ericsson.alodiga.utils.encrypt.S3cur1ty3Cryt3r;
 import static com.lexisnexis.bridgerinsight.BridgerInsight_Web_Services_Interfaces_9_0.AssignmentType.User;
+import com.sun.corba.se.impl.orbutil.closure.Constant;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -126,19 +128,15 @@ import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec;
 @Stateless(name = "FsProcessor", mappedName = "ejb/FsProcessor")
 @TransactionManagement(TransactionManagementType.CONTAINER)
 public class APIOperations {
-    
-    
-    
+
     @PersistenceContext(unitName = "aloDiga")
     private EntityManager entityManager;
-    
+
     @PersistenceContext(unitName = "saat")
     private EntityManager entityManagerSaat;
-    
+
     private static final Logger logger = Logger.getLogger(APIOperations.class);
-    
-    
-    
+
     private boolean validarUsuario(String usuario, String password) {
         UsuarioWS usuarioWS = entityManager
                 .createNamedQuery("UsuarioWS.findUserAndPassword",
@@ -146,7 +144,7 @@ public class APIOperations {
         return (usuarioWS.getUsuario().equals(usuario) && usuarioWS
                 .getPassword().equals(password));
     }
-    
+
     public RespuestaListadoAplicaciones getAplicaciones(String usuarioApi,
             String passwordApi) {
         try {
@@ -164,7 +162,7 @@ public class APIOperations {
                     CodigoRespuesta.ERROR_INTERNO, e.getMessage());
         }
     }
-    
+
     public RespuestaListadoOcupaciones getOcupaciones(String usuarioApi,
             String passwordApi) {
         try {
@@ -182,7 +180,7 @@ public class APIOperations {
                     CodigoRespuesta.ERROR_INTERNO, e.getMessage());
         }
     }
-    
+
     public RespuestaListadoTipoDocumento getTiposDocumento(String usuarioApi,
             String passwordApi) {
         try {
@@ -200,7 +198,7 @@ public class APIOperations {
                     CodigoRespuesta.ERROR_INTERNO, e.getMessage());
         }
     }
-    
+
     public RespuestaListadoTipoEmpresa getTiposEmpresa(String usuarioApi,
             String passwordApi) {
         try {
@@ -218,20 +216,20 @@ public class APIOperations {
                     CodigoRespuesta.ERROR_INTERNO, e.getMessage());
         }
     }
-    
+
     public RespuestaListadoEmpresa getListaEmpresaPorPosTipoPersona(
             String usuarioApi, String passwordApi, String descripcion,
             String tipoPersona) {
-        
+
         try {
             if (validarUsuario(usuarioApi, passwordApi)) {
-                
+
                 List<Empresa> lista = getListaEmpresaPorPosTipoPersona(
                         descripcion, tipoPersona);
                 return new RespuestaListadoEmpresa(CodigoRespuesta.EXITO, null,
                         lista);
             } else {
-                
+
                 return new RespuestaListadoEmpresa(
                         CodigoRespuesta.ERROR_CREDENCIALES);
             }
@@ -242,7 +240,7 @@ public class APIOperations {
                     e.getMessage());
         }
     }
-    
+
     public RespuestaGuardarUsuario guardarUsuario(String usuarioApi,
             String passwordApi, String usuarioId, String nombre,
             String apellido, String credencial, String email, String movil,
@@ -386,7 +384,7 @@ public class APIOperations {
                 }
                 usuario.setImagen(imagen1);
                 usuario.setEmail(email);
-                
+
                 Cuenta cuenta = new Cuenta();
                 cuenta.setNumeroCuenta(Utils.generarNumeroDeCuenta());
                 cuenta.setSaldoAlocoins(0d);
@@ -403,16 +401,16 @@ public class APIOperations {
                 usuario.setNombre(nombre);
                 usuario.setCredencial(credencial);
                 usuario.setCredencialFecha(new Date());
-                
+
                 logger.debug("usuario: --->" + usuario);
                 logger.debug("direccion1: --->" + direccion1);
                 logger.debug("cuenta: --->" + cuenta);
-                
+
                 if (usuarioId == null) {
                     entityManager.persist(usuario);
                     logger.info("**************Sending email to user ********************"
                             + usuario.getNombre());
-                    
+
                     Utils.enviarCorreUsuarioNuevo("ES", usuario, link);
                     usuario.setEmail(email);
                 } else {
@@ -435,14 +433,14 @@ public class APIOperations {
                     + e.getCause() + e.getStackTrace());
         }
     }
-    
+
     public RespuestaGuardarUsuario guardarUsuarioAplicacionMovil(String usuarioApi,
             String passwordApi, String usuarioId, String nombre,
             String apellido, String credencial, String email, String movil,
             String fechaNacimiento, String direccion, String paisId,
             String estadoId, String ciudadId, String condadoId,
             String codigoPostal, String codigoValidacionMovil,
-                String nombreImagen, byte[] imagenBytes, String link, String pin, boolean isSocialNetwork) {
+            String nombreImagen, byte[] imagenBytes, String link, String pin, boolean isSocialNetwork) {
         link = "http://llamadas.alodiga.com/site/welcome";
         try {
             if (validarUsuario(usuarioApi, passwordApi)) {
@@ -579,7 +577,7 @@ public class APIOperations {
                 }
                 usuario.setImagen(imagen1);
                 usuario.setEmail(email);
-                
+
                 Cuenta cuenta = new Cuenta();
                 cuenta.setNumeroCuenta(Utils.generarNumeroDeCuenta());
                 cuenta.setSaldoAlocoins(0d);
@@ -602,44 +600,42 @@ public class APIOperations {
                 logger.debug("usuario: --->" + usuario);
                 logger.debug("direccion1: --->" + direccion1);
                 logger.debug("cuenta: --->" + cuenta);
-                
+              
                 if (usuarioId == null || usuarioId.equals("")) {
-                    
+
                     try {
                         entityManager.persist(usuario);
                         System.out.println("paso el persis");
-                         //Envio de Correo Electronico
-                    
+                        //Envio de Correo Electronico
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    
+
                     logger.info("**************Sending email to user ********************"
                             + usuario.getNombre());
-                    
+
 //                    //Utils.enviarCorreUsuarioNuevo("ES", usuario, link);
 //                    //Envio de Correo Electronico  
 //                    Mail mail = Utils.enviarCorreUsuarioNuevoAplicacionMovil("ES", usuario);
 //                    AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
-                   
-                    
                 } else {
                     entityManager.merge(usuario);
                 }
                 entityManager.flush();
-                    System.out.println("usuario........" + usuario.getUsuarioId());
+                System.out.println("usuario........" + usuario.getUsuarioId());
                 APIAlodigaWalletProxy alodigaWalletProxy = new APIAlodigaWalletProxy();
                 alodigaWalletProxy.saveUserHasProductDefault(String.valueOf(usuario.getUsuarioId()));
-                
+
                 SendMailTherad sendMailTherad = new SendMailTherad("ES", usuario, Integer.valueOf("1"));
-                    sendMailTherad.run();
-                
-                SendSmsThread sendSmsThread = new SendSmsThread(movil, usuario,Integer.valueOf("1"));
+                sendMailTherad.run();
+
+                SendSmsThread sendSmsThread = new SendSmsThread(movil, usuario, Integer.valueOf("1"));
                 sendSmsThread.run();
-                    usuario.setEmail(email);
+                usuario.setEmail(email);
                 return new RespuestaGuardarUsuario(CodigoRespuesta.EXITO,
                         CodigoRespuesta.EXITO.name(), usuario);
-                
+
             }
             return new RespuestaGuardarUsuario(
                     CodigoRespuesta.ERROR_CREDENCIALES);
@@ -655,7 +651,7 @@ public class APIOperations {
                     + e.getCause() + e.getStackTrace());
         }
     }
-    
+
     private boolean isEmailUnique(String email) {
         try {
             entityManager
@@ -666,7 +662,7 @@ public class APIOperations {
         }
         return false;
     }
-    
+
     private boolean isMovilUnique(String movil) {
         try {
             entityManager
@@ -677,7 +673,7 @@ public class APIOperations {
         }
         return false;
     }
-    
+
     private boolean isEinUnique(String ein) {
         try {
             entityManager.createNamedQuery("Empresa.findByEin", Empresa.class)
@@ -687,7 +683,7 @@ public class APIOperations {
         }
         return false;
     }
-    
+
     public RespuestaGuardarDireccionConfianza guardarDireccionConfianza(
             String usuarioApi, String passwordApi, Integer usuarioId, String ip) {
         if (!validarUsuario(usuarioApi, passwordApi)) {
@@ -709,7 +705,7 @@ public class APIOperations {
         }
         return new RespuestaGuardarDireccionConfianza(CodigoRespuesta.EXITO);
     }
-    
+
     public RespuestaPreguntasSecretas getPreguntaIdioma(String usuarioApi,
             String passwordApi, Integer IdIdioma) {
         if (validarUsuario(usuarioApi, passwordApi)) {
@@ -721,7 +717,7 @@ public class APIOperations {
                     CodigoRespuesta.DATOS_INVALIDOS);
         }
     }
-    
+
     public RespuestaPreguntasSecretasUsuario getPreguntasSecretasUsuario(
             String usuarioApi, String passwordApi, Integer usuarioId) {
         if (validarUsuario(usuarioApi, passwordApi)) {
@@ -742,7 +738,7 @@ public class APIOperations {
                     CodigoRespuesta.DATOS_INVALIDOS);
         }
     }
-    
+
     public RespuestaUsuario getUsuarioporemail(String usuarioApi,
             String passwordApi, String email) {
         try {
@@ -765,7 +761,7 @@ public class APIOperations {
                     e.getMessage());
         }
     }
-    
+
     public RespuestaUsuario getUsuariopormovil(String usuarioApi,
             String passwordApi, String movil) {
         try {
@@ -788,7 +784,7 @@ public class APIOperations {
                     e.getMessage());
         }
     }
-    
+
     public RespuestaUsuario getUsuarioporId(String usuarioApi,
             String passwordApi, String usuarioId) {
         try {
@@ -820,7 +816,7 @@ public class APIOperations {
             cuenta.setSaldoAlocoins(cantidad);
             usuario.setCuenta(cuenta);
             entityManager.merge(usuario);
-            resultado = new Respuesta(null, Constante.sERR_COD_00, "Acreditado");            
+            resultado = new Respuesta(null, Constante.sERR_COD_00, "Acreditado");
         } catch (Exception e) {
             logger.error(e);
             resultado = new Respuesta(null, Constante.sERR_COD_99, e.getMessage());
@@ -828,7 +824,7 @@ public class APIOperations {
         }
         return resultado;
     }
-    
+
     public RespuestaListadoUsuarios getAplicacionUsuario(String usuarioApi,
             String passwordApi, Integer IdAplicaciones) {
         if (validarUsuario(usuarioApi, passwordApi)) {
@@ -841,7 +837,7 @@ public class APIOperations {
             return new RespuestaListadoUsuarios(CodigoRespuesta.DATOS_INVALIDOS);
         }
     }
-    
+
     public Respuesta activarUsuarioPorCorreo(String usuarioApi,
             String passwordApi, String correo) {
         if (validarUsuario(usuarioApi, passwordApi)) {
@@ -850,11 +846,11 @@ public class APIOperations {
             }
             Usuario usuario = null;
             try {
-                
+
                 usuario = getUsuarioporemail(Encryptor.decrypt(
                         Utils.obtienePropiedad("ENC_KEY"),
                         Utils.obtienePropiedad("ENC_INIT_VALUE"), correo));
-                
+
             } catch (Exception e) {
                 logger.debug("Error al obtener usuario: " + e);
                 return new Respuesta(CodigoRespuesta.USUARIO_NO_EXISTE);
@@ -869,7 +865,7 @@ public class APIOperations {
             return new Respuesta(CodigoRespuesta.ERROR_CREDENCIALES);
         }
     }
-    
+
     public Respuesta activarUsuario(String usuarioApi, String passwordApi,
             Integer usuarioId) {
         if (validarUsuario(usuarioApi, passwordApi)) {
@@ -891,7 +887,7 @@ public class APIOperations {
             return new Respuesta(CodigoRespuesta.DATOS_INVALIDOS);
         }
     }
-    
+
     public RespuestaListadoUsuarios getUsuarios(String usuarioApi,
             String passwordApi) {
         if (validarUsuario(usuarioApi, passwordApi)) {
@@ -903,7 +899,7 @@ public class APIOperations {
                     CodigoRespuesta.ERROR_CREDENCIALES);
         }
     }
-    
+
     public RespuestaGuardarUsuario guardarPerfilAloPos(String usuarioApi,
             String passwordApi, Integer usuarioId, String genero,
             String telefonoResidencial, Integer ocupacionId,
@@ -922,7 +918,7 @@ public class APIOperations {
         }
         Usuario usuario = null;
         try {
-            
+
             if (usuarioId == null || genero == null
                     || telefonoResidencial == null || ocupacionId == null
                     || tipoDocumentoId == null || numeroDocumento == null
@@ -978,7 +974,7 @@ public class APIOperations {
                 Aplicacion aplicacion = getAplicacionporNombre("ALOPOS");
                 usuario.getAplicaciones().add(aplicacion);
             }
-            
+
             if (genero == null || genero == "") {
                 usuario.getGenero();
             } else {
@@ -1024,17 +1020,17 @@ public class APIOperations {
             CuentaBancariaTipo cbt = entityManager.find(
                     CuentaBancariaTipo.class, tipoCuentaBancariaId);
             cuentaBancaria.setCuentaBancariaTipo(cbt);
-            
+
             direccion.setCiudadId(ciudadEmpresaId);
             direccion.setCodigoPostal(codigoPostalEmpresa);
             direccion.setDireccion(direccionEmpresa);
             direccion.setEstadoId(estadoEmpresaId);
             direccion.setPaisId(paisEmpresaId);
-            
+
             empresa.setCuentaBancaria(cuentaBancaria);
             empresa.setDireccion(direccion);
             empresa.setEin(einEmpresa);
-            
+
             empresa.setEmail(emailEmpresa);
             if (ingresosEstimadosEmpresa == null
                     || ingresosEstimadosEmpresa == "") {
@@ -1048,7 +1044,7 @@ public class APIOperations {
             TipoEmpresa tipoEmpresa = entityManager.find(TipoEmpresa.class,
                     tipoEmpresaId);
             empresa.setTipoEmpresa(tipoEmpresa);
-            
+
             perfil.setEmpresa(empresa);
             perfil.setTipoPersona(tipoPersona);
             if (tipoPersona == "NATURAL") {
@@ -1062,7 +1058,7 @@ public class APIOperations {
                     perfil.setFechaVencimientoDocumento(date);
                 }
             }
-            
+
             usuario.setPerfilAloPos(perfil);
             // TODO deshabilitado hasta tener el certificado
             /*
@@ -1080,7 +1076,7 @@ public class APIOperations {
             return new RespuestaGuardarUsuario(CodigoRespuesta.DATOS_INVALIDOS,
                     e.getLocalizedMessage());
         } catch (Exception e) {
-            
+
             System.out.println(e);
             return new RespuestaGuardarUsuario(CodigoRespuesta.ERROR_INTERNO,
                     "Error - " + e.getMessage() + e.getLocalizedMessage()
@@ -1088,7 +1084,7 @@ public class APIOperations {
         }
         return new RespuestaGuardarUsuario(CodigoRespuesta.EXITO, null, usuario);
     }
-    
+
     public RespuestaUsuario getUsuarioporAplicacion(String usuarioApi,
             String passwordApi, Integer usuarioId, Integer aplicacionId) {
         try {
@@ -1112,7 +1108,7 @@ public class APIOperations {
                     return new RespuestaUsuario(
                             CodigoRespuesta.APLICACION_NO_EXISTE);
                 }
-                
+
                 return new RespuestaUsuario(CodigoRespuesta.EXITO, null,
                         usuario);
             } else {
@@ -1125,7 +1121,7 @@ public class APIOperations {
                     e.getMessage());
         }
     }
-    
+
     public RespuestaGuardarUsuario guardarPerfilAloCash(String usuarioApi,
             String passwordApi, Integer usuarioId, String genero,
             String telefonoResidencial, String ocupacionId,
@@ -1136,7 +1132,7 @@ public class APIOperations {
         }
         Usuario usuario = null;
         try {
-            
+
             if ((usuarioId == null || genero == null
                     || telefonoResidencial == null || ocupacionId == null
                     || tipoDocumentoId == null || numeroDocumento == null)
@@ -1146,18 +1142,18 @@ public class APIOperations {
                 return new RespuestaGuardarUsuario(
                         CodigoRespuesta.DATOS_INVALIDOS);
             }
-            
+
             if (!(genero.equalsIgnoreCase("M") || genero.equalsIgnoreCase("F"))) {
                 return new RespuestaGuardarUsuario(
                         CodigoRespuesta.DATOS_INVALIDOS);
             }
-            
+
             if (!(Utils.isNumeroValido(ocupacionId))
                     || !(Utils.isNumeroValido(tipoDocumentoId))) {
                 return new RespuestaGuardarUsuario(
                         CodigoRespuesta.DATOS_INVALIDOS);
             }
-            
+
             if (!(telefonoResidencial.length() >= 11)
                     || !(telefonoResidencial.length() <= 16)
                     || !(Utils.isNumeroValido(telefonoResidencial))) {
@@ -1174,7 +1170,7 @@ public class APIOperations {
                     TipoDocumento.class, Integer.parseInt(tipoDocumentoId));
             usuario.setTipoDocumento(tipoDocumento);
             usuario.setTelefonoResidencial(telefonoResidencial);
-            
+
             if (!existeAplicacion(usuario.getAplicaciones(), "ALOCASH")) {
                 Aplicacion aplicacion = getAplicacionporNombre("ALOCASH");
                 usuario.getAplicaciones().add(aplicacion);
@@ -1202,13 +1198,13 @@ public class APIOperations {
         }
         return new RespuestaGuardarUsuario(CodigoRespuesta.EXITO, null, usuario);
     }
-    
+
     public RespuestaGuardarUsuario guardarPerfilAloEsp(String usuarioApi,
             String passwordApi, Integer usuarioId, String tipoCuenta,
             String nombreTienda, double montoMaximo, String einTienda,
             String taxTienda, String razonSocial,
             String telefonoEstablecimiento, String idiomaEnvio) {
-        
+
         if (!Utils.isStringValido(tipoCuenta)
                 || !Utils.isStringValido(nombreTienda)
                 || !Utils.isStringValido(einTienda)
@@ -1218,12 +1214,12 @@ public class APIOperations {
                 || !Utils.isStringValido(idiomaEnvio)) {
             return new RespuestaGuardarUsuario(CodigoRespuesta.DATOS_INVALIDOS);
         }
-        
+
         if (!validarUsuario(usuarioApi, passwordApi)) {
             return new RespuestaGuardarUsuario(
                     CodigoRespuesta.ERROR_CREDENCIALES);
         }
-        
+
         Usuario usuario = entityManager.find(Usuario.class, usuarioId);
         if (usuario.getPerfilAloEsp() == null) {
             Aplicacion aplicacion = getAplicacionporNombre("ALOESP");
@@ -1254,7 +1250,7 @@ public class APIOperations {
         Utils.enviarCorreoConfirmacion("ES", usuario, "ALOESP");
         return new RespuestaGuardarUsuario(CodigoRespuesta.EXITO, null, usuario);
     }
-    
+
     public RespuestaGuardarUsuario guardarPerfilAloRRP(String usuarioApi,
             String passwordApi, Integer usuarioId, boolean kitAfiliacion,
             String empresaId, String distribuidorPadreId) {
@@ -1269,16 +1265,16 @@ public class APIOperations {
                 return new RespuestaGuardarUsuario(
                         CodigoRespuesta.DATOS_INVALIDOS);
             }
-            
+
             if (!(Utils.isNumeroValido(empresaId))
                     || (distribuidorPadreId != null && !(Utils
                             .isNumeroValido(distribuidorPadreId)))) {
                 return new RespuestaGuardarUsuario(
                         CodigoRespuesta.DATOS_INVALIDOS);
             }
-            
+
             usuario = entityManager.find(Usuario.class, usuarioId);
-            
+
             PerfilAloRRP perfil = usuario.getPerfilAloRrp();
             if (perfil == null) {
                 perfil = new PerfilAloRRP();
@@ -1290,7 +1286,7 @@ public class APIOperations {
             perfil.setEmpresaId(Integer.parseInt(empresaId));
             perfil.setIsAffiliatedKit(kitAfiliacion);
             usuario.setPerfilAloRrp(perfil);
-            
+
             if (!existeAplicacion(usuario.getAplicaciones(), "ALORRP")) {
                 Aplicacion aplicacion = getAplicacionporNombre("ALORRP");
                 usuario.getAplicaciones().add(aplicacion);
@@ -1303,7 +1299,7 @@ public class APIOperations {
         }
         return new RespuestaGuardarUsuario(CodigoRespuesta.EXITO, null, usuario);
     }
-    
+
     public RespuestaGuardarUsuario guardarPerfilAloBenefit(String usuarioApi,
             String passwordApi, Integer usuarioId) {
         if (!validarUsuario(usuarioApi, passwordApi)) {
@@ -1319,9 +1315,9 @@ public class APIOperations {
         }
         return new RespuestaGuardarUsuario(CodigoRespuesta.EXITO, null, usuario);
     }
-    
+
     public Respuesta guardarBitacora(Integer usuarioId, String ip, String accion) {
-        
+
         Usuario usuario = entityManager.find(Usuario.class, usuarioId);
         try {
             Accion action = entityManager
@@ -1332,10 +1328,10 @@ public class APIOperations {
         } catch (Exception e) {
             return new Respuesta(CodigoRespuesta.DATOS_INVALIDOS);
         }
-        
+
         return new Respuesta(CodigoRespuesta.EXITO);
     }
-    
+
     public Respuesta logout(String usuarioApi, String passwordApi, String token) {
         try {
             if (!validarUsuario(usuarioApi, passwordApi)) {
@@ -1352,7 +1348,7 @@ public class APIOperations {
             } else {
                 return new Respuesta(CodigoRespuesta.TOKEN_EXPIRADO);
             }
-            
+
             Accion action = entityManager
                     .createNamedQuery("Accion.byDescripcion", Accion.class)
                     .setParameter("descripcion", Accion.LOGOUT)
@@ -1367,7 +1363,7 @@ public class APIOperations {
         }
         return new Respuesta(CodigoRespuesta.EXITO);
     }
-    
+
     public Respuesta desbloquearUsuario(String usuarioApi, String passwordApi,
             Integer usuarioId, List<PreguntaSecreta> preguntasSecretasEnviadas) {
         Usuario usuario = null;
@@ -1406,7 +1402,7 @@ public class APIOperations {
             return new Respuesta(CodigoRespuesta.EXITO);
         }
     }
-    
+
     private PreguntaSecreta obtenerPreguntaSecreta(Integer preguntaSecretaId,
             List<PreguntaSecreta> preguntasSecretas) {
         for (PreguntaSecreta preguntaSecreta : preguntasSecretas) {
@@ -1416,7 +1412,7 @@ public class APIOperations {
         }
         return null;
     }
-    
+
     public Respuesta setPreguntasSecretasUsuario(Integer usuarioId,
             List<PreguntaSecreta> preguntasSecretas) {
         try {
@@ -1440,14 +1436,14 @@ public class APIOperations {
         }
         return new Respuesta(CodigoRespuesta.EXITO);
     }
-    
+
     public Respuesta setPreguntasSecretasUsuarioAplicacionMovil(String usuarioApi, String passwordApi, Integer usuarioId, String preguntaId1, String repuestaId1,
             String preguntaId2, String repuestaId2, String preguntaId3, String repuestaId3) {
-        
+
         Usuario usuario = entityManager.find(Usuario.class, usuarioId);
-        
+
         List<PreguntaSecreta> preguntasSecretas = usuario.getPreguntaSecretas();
-        
+
         if (preguntasSecretas.size() > 0) {
             for (PreguntaSecreta p : preguntasSecretas) {
                 if (p.getPreguntaId() == Integer.valueOf(preguntaId1)) {
@@ -1461,27 +1457,27 @@ public class APIOperations {
                 } else if (p.getPreguntaId() == Integer.valueOf(preguntaId3)) {
                     p.setRespuesta(repuestaId3);
                     p.setUsuario(usuario);
-                    continue;                    
+                    continue;
                 }
             }
         } else {
             PreguntaSecreta pregunta1 = new PreguntaSecreta();
             pregunta1.setPreguntaId(Integer.valueOf(preguntaId1));
             pregunta1.setRespuesta(repuestaId1);
-            pregunta1.setUsuario(usuario);            
-            preguntasSecretas.add(pregunta1);            
-            
+            pregunta1.setUsuario(usuario);
+            preguntasSecretas.add(pregunta1);
+
             PreguntaSecreta pregunta2 = new PreguntaSecreta();
             pregunta2.setPreguntaId(Integer.valueOf(preguntaId2));
             pregunta2.setRespuesta(repuestaId2);
-            pregunta2.setUsuario(usuario);            
+            pregunta2.setUsuario(usuario);
             preguntasSecretas.add(pregunta2);
-            
+
             PreguntaSecreta pregunta3 = new PreguntaSecreta();
             pregunta3.setPreguntaId(Integer.valueOf(preguntaId3));
             pregunta3.setRespuesta(repuestaId3);
-            pregunta3.setUsuario(usuario);            
-            preguntasSecretas.add(pregunta3);            
+            pregunta3.setUsuario(usuario);
+            preguntasSecretas.add(pregunta3);
         }
         try {
             if (preguntasSecretas == null || preguntasSecretas.isEmpty()
@@ -1500,14 +1496,14 @@ public class APIOperations {
         }
         return new Respuesta(CodigoRespuesta.EXITO);
     }
-    
+
     public RespuestaNuevoToken login(String usuarioApi, String passwordApi,
             String email, String movil, String credencial, String ip) {
-        
+
         if (!validarUsuario(usuarioApi, passwordApi)) {
             return new RespuestaNuevoToken(CodigoRespuesta.ERROR_CREDENCIALES);
         }
-        
+
         if (!Utils.isStringValido(movil) && !Utils.isStringValido(email)) {
             return new RespuestaNuevoToken(CodigoRespuesta.DATOS_NULOS);
         }
@@ -1518,7 +1514,7 @@ public class APIOperations {
 //				.setParameter("nombreConfiguracion", "DIAS_MAXIMO_CREDENCIAL")
 //				.getSingleResult();
         Usuario usuario = getLoginUsuario(email, movil);
-        
+
         if (usuario == null) {
             return new RespuestaNuevoToken(CodigoRespuesta.USUARIO_NO_EXISTE);
         }
@@ -1542,7 +1538,7 @@ public class APIOperations {
                 usuario.setEstado(getEstadoPorDescripcion(Estado.BLOQUEADO));
                 Utils.enviarCorreoBloqueo("ES", usuario);
             }
-         
+
         } else if (usuario.getEstado().getDescripcion()
                 .equals(Estado.PENDIENTE)) {
             return new RespuestaNuevoToken(CodigoRespuesta.USUARIO_PENDIENTE);
@@ -1558,12 +1554,12 @@ public class APIOperations {
         // Agregado unicamente para pruebas de Alodiga
         DireccionConfianza direccion = entityManager.find(
                 DireccionConfianza.class, 2);
-        
+
         if (usuario.getPreguntaSecretas() == null
                 || usuario.getPreguntaSecretas().isEmpty()) {
             return new RespuestaNuevoToken(CodigoRespuesta.PRIMER_INGRESO);
         }
-        
+
         usuario.setIntentosFallidos(0);
         SesionUsuario sesion = new SesionUsuario();
         sesion.setActivo(true);
@@ -1576,23 +1572,23 @@ public class APIOperations {
         Accion action = entityManager
                 .createNamedQuery("Accion.byDescripcion", Accion.class)
                 .setParameter("descripcion", Accion.LOGIN).getSingleResult();
-        
+
         entityManager.persist(new Bitacora(ip, action, usuario));
         entityManager.persist(sesion);
         entityManager.merge(usuario);
-        
+
         return new RespuestaNuevoToken(CodigoRespuesta.EXITO,
                 CodigoRespuesta.EXITO.name(), token);
-        
+
     }
-    
-    public RespuestaUsuario loginAplicacionMovil(String usuarioApi, String passwordApi,
+
+        public RespuestaUsuario loginAplicacionMovil(String usuarioApi, String passwordApi,
             String email, String movil, String credencial, String ip) {
-        
-            if (!validarUsuario(usuarioApi, passwordApi)) {
+
+        if (!validarUsuario(usuarioApi, passwordApi)) {
             return new RespuestaUsuario(CodigoRespuesta.ERROR_CREDENCIALES);
         }
-        
+
         if (!Utils.isStringValido(movil) && !Utils.isStringValido(email)) {
             return new RespuestaUsuario(CodigoRespuesta.DATOS_NULOS);
         }
@@ -1603,19 +1599,18 @@ public class APIOperations {
 //				.setParameter("nombreConfiguracion", "DIAS_MAXIMO_CREDENCIAL")
 //				.getSingleResult();
         Usuario usuario = getLoginUsuario(email, movil);
-        
+
         if (usuario == null) {
             return new RespuestaUsuario(CodigoRespuesta.USUARIO_NO_EXISTE);
         }
         DateTime fechaActual = new DateTime();
         DateTime fechaCredencial = new DateTime(usuario.getCredencialFecha());
-        
 
-    //Aplicar algoritmo a credencial
+        //Aplicar algoritmo a credencial
         try {
             credencial = S3cur1ty3Cryt3r.aloEncrpter(credencial, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
             credencial = Utils.MD5(credencial);
-            System.out.println("MD5......................+ :"+ credencial);
+            System.out.println("MD5......................+ :" + credencial);
         } catch (NoSuchAlgorithmException ex) {
             java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
             ex.printStackTrace();
@@ -1641,8 +1636,6 @@ public class APIOperations {
             ex.printStackTrace();
             return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
         }
- 
-        
 
 //		fechaCredencial = fechaCredencial.plusDays(Integer
 //				.parseInt(diasValidezCredencial.getValorConfiguracion()));
@@ -1679,42 +1672,43 @@ public class APIOperations {
         // Agregado unicamente para pruebas de Alodiga
         DireccionConfianza direccion = entityManager.find(
                 DireccionConfianza.class, 2);
-        
+
         if (usuario.getPreguntaSecretas() == null
                 || usuario.getPreguntaSecretas().isEmpty()) {
-            
-            
-        APIAlodigaWalletProxy alodigaWalletProxy = new APIAlodigaWalletProxy();
-        ProductListResponse productListResponse;
-        try {            
-            productListResponse = alodigaWalletProxy.getProductsByUserId(String.valueOf(usuario.getUsuarioId()));
-        
-        } catch (RemoteException ex) {
-            ex.printStackTrace();
-            return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
-        }
-        List<RespuestaListadoProducto> respuestaListadoProductos = new ArrayList<RespuestaListadoProducto>();        
-        for (Product p : productListResponse.getProducts()) {
-             BalanceHistoryResponse balanceHistoryResponse = new BalanceHistoryResponse();
-             Float currentBalanceProduct = 0F;
+
+            APIAlodigaWalletProxy alodigaWalletProxy = new APIAlodigaWalletProxy();
+            ProductListResponse productListResponse;
             try {
-                balanceHistoryResponse = alodigaWalletProxy.getBalanceHistoryByProductAndUser(Long.valueOf(usuario.getUsuarioId()), p.getId());
-                if(balanceHistoryResponse.getCodigoRespuesta().equals(Constante.NOT_BALANCE_HISTORY_AVAILABLE_CODE)){
-                    //No tiene producto asociado
-                    currentBalanceProduct = 0F;
-                }else{
-                    currentBalanceProduct = balanceHistoryResponse.getResponse().getCurrentAmount();
-                }
+                productListResponse = alodigaWalletProxy.getProductsByUserId(String.valueOf(usuario.getUsuarioId()));
+
             } catch (RemoteException ex) {
+                ex.printStackTrace();
                 return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
-            }         
-            respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(),currentBalanceProduct, p.getName(),p.getSymbol(), p.isIsPayTopUp()));                  
-        }     
-        usuario.setRespuestaListadoProductos(respuestaListadoProductos);
-            
+            }
+            List<RespuestaListadoProducto> respuestaListadoProductos = new ArrayList<RespuestaListadoProducto>();
+            for (Product p : productListResponse.getProducts()) {
+                BalanceHistoryResponse balanceHistoryResponse = new BalanceHistoryResponse();
+                Float currentBalanceProduct = 0F;
+                try {
+                    balanceHistoryResponse = alodigaWalletProxy.getBalanceHistoryByProductAndUser(Long.valueOf(usuario.getUsuarioId()), p.getId());
+                    if (balanceHistoryResponse.getCodigoRespuesta().equals(Constante.NOT_BALANCE_HISTORY_AVAILABLE_CODE)) {
+                        //No tiene producto asociado
+                        currentBalanceProduct = 0F;
+                    } else {
+                        currentBalanceProduct = balanceHistoryResponse.getResponse().getCurrentAmount();
+                    }
+                } catch (RemoteException ex) {
+                    return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+                }
+                respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSymbol(), p.isIsPayTopUp()));
+            }
+            usuario.setRespuestaListadoProductos(respuestaListadoProductos);
+
+            //Se le coloca 4 por que no tiene cuplimiento
+            usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
             return new RespuestaUsuario(CodigoRespuesta.PRIMER_INGRESO, CodigoRespuesta.PRIMER_INGRESO.name(), usuario);
         }
-        
+
         usuario.setIntentosFallidos(0);
         SesionUsuario sesion = new SesionUsuario();
         sesion.setActivo(true);
@@ -1724,90 +1718,114 @@ public class APIOperations {
         String token = UUID.randomUUID().toString();
         sesion.setToken(token);
         System.out.println("token: " + token);
-        
-        
 
         entityManager.flush();
-  
+
         Accion action = entityManager
                 .createNamedQuery("Accion.byDescripcion", Accion.class)
                 .setParameter("descripcion", Accion.LOGIN).getSingleResult();
-        
+
         entityManager.persist(new Bitacora(ip, action, usuario));
-        
+
         entityManager.persist(sesion);
 
         entityManager.merge(usuario);
-  
-        
+
         APIAlodigaWalletProxy alodigaWalletProxy = new APIAlodigaWalletProxy();
         ProductListResponse productListResponse;
-        
-                try {            
+
+        try {
             productListResponse = alodigaWalletProxy.getProductsByUserId(String.valueOf(usuario.getUsuarioId()));
         } catch (RemoteException ex) {
             ex.printStackTrace();
             return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
         }
-        List<RespuestaListadoProducto> respuestaListadoProductos = new ArrayList<RespuestaListadoProducto>();        
+        List<RespuestaListadoProducto> respuestaListadoProductos = new ArrayList<RespuestaListadoProducto>();
         for (Product p : productListResponse.getProducts()) {
-             BalanceHistoryResponse balanceHistoryResponse = new BalanceHistoryResponse();
-             Float currentBalanceProduct = 0F;
-            try {
+            BalanceHistoryResponse balanceHistoryResponse = new BalanceHistoryResponse();
+            Float currentBalanceProduct = 0F;
+            try {            
                 balanceHistoryResponse = alodigaWalletProxy.getBalanceHistoryByProductAndUser(Long.valueOf(usuario.getUsuarioId()), p.getId());
-                if(balanceHistoryResponse.getCodigoRespuesta().equals(Constante.NOT_BALANCE_HISTORY_AVAILABLE_CODE)){
+                if (balanceHistoryResponse.getCodigoRespuesta().equals(Constante.NOT_BALANCE_HISTORY_AVAILABLE_CODE)) {
                     //No tiene producto asociado
                     currentBalanceProduct = 0F;
-                }else{
+                } else {               
                     currentBalanceProduct = balanceHistoryResponse.getResponse().getCurrentAmount();
                 }
             } catch (RemoteException ex) {
                 return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
-            }         
-            respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(),currentBalanceProduct, p.getName(),p.getSymbol(), p.isIsPayTopUp()));                  
-        }     
+            }
+            respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSymbol(), p.isIsPayTopUp()));
+        }
         usuario.setRespuestaListadoProductos(respuestaListadoProductos);
-        
-        APIAlodigaWalletProxy aPIAlodigaWalletProxy = new APIAlodigaWalletProxy();  
+        APIAlodigaWalletProxy aPIAlodigaWalletProxy = new APIAlodigaWalletProxy();
         CumplimientResponse cumplimientResponse = new CumplimientResponse();
         try {
             cumplimientResponse = aPIAlodigaWalletProxy.getCumplimientStatus(String.valueOf(usuario.getUsuarioId()));
-            
+
         } catch (RemoteException ex) {
             ex.printStackTrace();
             return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
         }
+
+            try {
+                usuario.setCumplimient(cumplimientResponse.getCumplimients().getComplientStatusId().getId().toString());
+            } catch (NullPointerException e) {
+                //No tiene cumplimineto aun
+                  usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
+            }
         
-        usuario.setCumplimient(cumplimientResponse.getCumplimients().getComplientStatusId().getId().toString());
-        
-        
+
+        try {
+            if (aPIAlodigaWalletProxy.hasPrepayCardAsociated(Long.valueOf(usuario.getUsuarioId()))) {
+                usuario.setPrepayCardAsociate(Constante.HAS_PREPAY_CARD_ASOCIATED);
+
+            }else {
+              usuario.setPrepayCardAsociate(Constante.NOT_HAS_PREPAY_CARD_ASOCIATED);
+            }
+
+            if (aPIAlodigaWalletProxy.hasPrepayCard(Long.valueOf(usuario.getUsuarioId()))) {
+                usuario.setPrepayCard(Constante.HAS_PREPAY_CARD);
+                CardResponse respuestaTarjeta = aPIAlodigaWalletProxy.getCardByUserId(String.valueOf(usuario.getUsuarioId()));
+                usuario.setNumberCard(respuestaTarjeta.getNumberCard());
+            }else {
+              usuario.setPrepayCard(Constante.NOT_HAS_PREPAY_CARD);
+            }
+            
+            
+
+        } catch (RemoteException ex) {
+            ex.printStackTrace();
+            return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+        }
+
         return new RespuestaUsuario(CodigoRespuesta.EXITO, CodigoRespuesta.EXITO.name(), usuario);
-        
+
     }
-    
+
     public RespuestaUsuario loginp(String usuarioApi, String passwordApi,
             String email, String movil, String credencial, String ip) {
-        
+
         if (!validarUsuario(usuarioApi, passwordApi)) {
             return new RespuestaUsuario(CodigoRespuesta.ERROR_CREDENCIALES);
         }
-        
+
         if (!Utils.isStringValido(movil) && !Utils.isStringValido(email)) {
             return new RespuestaUsuario(CodigoRespuesta.DATOS_NULOS);
         }
-        
+
         ConfiguracionGeneral diasValidezCredencial = entityManagerSaat
                 .createNamedQuery("getConfiguracionGeneralByNombre",
                         ConfiguracionGeneral.class)
                 .setParameter("nombreConfiguracion", "DIAS_MAXIMO_CREDENCIAL")
                 .getSingleResult();
-        
+
         Usuario usuario = getLoginUsuarioTemp(email, movil);
-        
+
         if (usuario == null) {
             return new RespuestaUsuario(CodigoRespuesta.USUARIO_NO_EXISTE);
         }
-        
+
         if (!usuario.getCredencial().equals(credencial)) {
             usuario.setIntentosFallidos(usuario.getIntentosFallidos() + 1);
             Accion action = entityManager
@@ -1844,7 +1862,7 @@ public class APIOperations {
          * if (usuario.getPreguntaSecretas() == null ||
          * usuario.getPreguntaSecretas().isEmpty()) { return new
          * RespuestaUsuario(CodigoRespuesta.PRIMER_INGRESO); }
-*
+         *
          */
         usuario.setIntentosFallidos(0);
         SesionUsuario sesion = new SesionUsuario();
@@ -1863,14 +1881,14 @@ public class APIOperations {
 		entityManager.persist(sesion);
          */
         entityManager.merge(usuario);
-        
+
         return new RespuestaUsuario(CodigoRespuesta.EXITO, CodigoRespuesta.EXITO.name(), usuario);
 
         /*
 		return new RespuestaNuevoToken(CodigoRespuesta.EXITO,
 				CodigoRespuesta.EXITO.name(), token);*/
     }
-    
+
     private boolean existeAplicacion(List<Aplicacion> aplicaciones,
             String nombre) {
         for (Aplicacion aplicacion : aplicaciones) {
@@ -1880,7 +1898,7 @@ public class APIOperations {
         }
         return false;
     }
-    
+
     private Usuario getLoginUsuario(String email, String movil) {
         if (Utils.isStringValido(email)) {
             return getUsuarioporemail(email);
@@ -1890,7 +1908,7 @@ public class APIOperations {
         }
         return null;
     }
-    
+
     private Usuario getLoginUsuarioTemp(String email, String movil) {
         Usuario usuario = null;
         if (Utils.isStringValido(email)) {
@@ -1910,27 +1928,27 @@ public class APIOperations {
                         DireccionConfianza.class).setParameter("ip", ip)
                 .setParameter("usuario", usuario).getSingleResult();
     }
-    
+
     private List<PreguntaIdioma> getPreguntaIdioma(Integer idIdioma) {
         Idioma idioma = entityManager.find(Idioma.class, idIdioma);
-        
+
         return entityManager
                 .createNamedQuery("PregPorIdioma", PreguntaIdioma.class)
                 .setParameter("Idioma", idioma).getResultList();
     }
-    
+
     private Estado getEstadoPorDescripcion(String descripcionEstado) {
         return entityManager
                 .createNamedQuery("Estado.findByDescription", Estado.class)
                 .setParameter("descripcion", descripcionEstado)
                 .getSingleResult();
     }
-    
+
     private List<Usuario> findAllUsers() {
         return entityManager.createNamedQuery("Usuario.findAll", Usuario.class)
                 .getResultList();
     }
-    
+
     private Usuario getUsuarioporemail(String email) {
         Usuario usuario = null;
         try {
@@ -1942,7 +1960,7 @@ public class APIOperations {
         }
         return usuario;
     }
-    
+
     private Usuario getUsuarioporcuenta(String cuenta) {
         Usuario usuario = null;
         try {
@@ -1968,7 +1986,7 @@ public class APIOperations {
         }
         return usuario;
     }
-    
+
     private Usuario getUsuarioporId(String id) {
         Usuario usuario = null;
         try {
@@ -1978,7 +1996,7 @@ public class APIOperations {
         }
         return usuario;
     }
-    
+
     private Usuario getUsuariopormovil(String movil) {
         Usuario usuario = null;
         try {
@@ -1990,31 +2008,31 @@ public class APIOperations {
         }
         return usuario;
     }
-    
+
     private List<Aplicacion> getAplicaciones() {
         return entityManager.createNamedQuery("Aplicacion.findAll",
                 Aplicacion.class).getResultList();
     }
-    
+
     private List<Ocupacion> getOcupaciones() {
         return entityManager.createNamedQuery("Ocupacion.findAll",
                 Ocupacion.class).getResultList();
     }
-    
+
     private List<TipoDocumento> getTipoDocumento() {
         return entityManager.createNamedQuery("TipoDocumento.findAll",
                 TipoDocumento.class).getResultList();
     }
-    
+
     private List<TipoEmpresa> getTipoEmpresa() {
         return entityManager.createNamedQuery("TipoEmpresa.findAll",
                 TipoEmpresa.class).getResultList();
     }
-    
+
     private List<Empresa> getListaEmpresaPorPosTipoPersona(String descripcion,
             String tipoPersona) throws Exception {
         String queryCompleto = Constante.SQL_LISTA_EMPRESAS;
-        
+
         List<Object> strList = new ArrayList<Object>();
         if (descripcion != null || tipoPersona != null) {
             queryCompleto += " where ";
@@ -2028,9 +2046,9 @@ public class APIOperations {
                 queryCompleto += " pa.tipoPersona = UPPER(?) ";
                 strList.add(tipoPersona);
             }
-            
+
         }
-        
+
         Connection connSaat = Conexion.obtenerConexion(Constante.sNombreSAAT);
         List<Empresa> listadoEmpresa = null;
         try {
@@ -2038,34 +2056,34 @@ public class APIOperations {
             listadoEmpresa = qr.query(connSaat, queryCompleto,
                     new BeanListHandler<Empresa>(Empresa.class),
                     strList.toArray());
-            
+
         } catch (Exception e) {
             logger.error(e);
             throw e;
         } finally {
             DbUtils.closeQuietly(connSaat);
         }
-        
+
         return listadoEmpresa;
-        
+
     }
-    
+
     private Aplicacion getAplicacionporNombre(String nombre) {
         return entityManager
                 .createNamedQuery("Aplicacion.findByNombre", Aplicacion.class)
                 .setParameter("nombre", nombre).getSingleResult();
     }
-    
+
     private MovilCodigo getMovilCodigoPorMovil(String movil) {
         return entityManager
                 .createNamedQuery("MovilCodigo.findByMovil", MovilCodigo.class)
                 .setParameter("movil", movil).setMaxResults(1)
                 .getSingleResult();
     }
-    
+
     public RespuestaToken getEstadoToken(String usuarioApi, String passwordApi,
             String Token) {
-        
+
         if (validarUsuario(usuarioApi, passwordApi)) {
             SesionUsuario sesion = null;
             try {
@@ -2079,7 +2097,7 @@ public class APIOperations {
             } catch (Exception e) {
                 return new RespuestaToken(CodigoRespuesta.DATOS_INVALIDOS);
             }
-            
+
             boolean activo = sesion.isActivo();
             if (activo) {
                 Date fechaExpiracion = new Date();
@@ -2109,12 +2127,12 @@ public class APIOperations {
                 return new RespuestaToken(CodigoRespuesta.TOKEN_EXPIRADO, null,
                         activo);
             }
-            
+
         } else {
             return new RespuestaToken(CodigoRespuesta.ERROR_CREDENCIALES);
         }
     }
-    
+
     public RespuestaCodigoRandom generarCodigoMovil(String movil) {
         String codigo = "";
         try {
@@ -2140,14 +2158,14 @@ public class APIOperations {
         }
         return new RespuestaCodigoRandom(CodigoRespuesta.EXITO, "", codigo);
     }
-    
+
     public RespuestaCodigoRandom generarCodigoMovilSMS(String usuarioApi,
             String passwordApi, String movil) {
         if (validarUsuario(usuarioApi, passwordApi)) {
             if (!isMovilUnique(movil)) {
                 return new RespuestaCodigoRandom(CodigoRespuesta.NUMERO_TELEFONO_YA_EXISTE);
             }
-            
+
             String codigo = "";
             try {
                 Random r = new Random();
@@ -2171,7 +2189,7 @@ public class APIOperations {
             return new RespuestaCodigoRandom(CodigoRespuesta.ERROR_CREDENCIALES);
         }
     }
-    
+
     public Respuesta validarExisteNumero(String usuarioApi,
             String passwordApi, String movil) {
         if (validarUsuario(usuarioApi, passwordApi)) {
@@ -2183,7 +2201,7 @@ public class APIOperations {
         }
         return new Respuesta(CodigoRespuesta.EXITO);
     }
-    
+
     public Respuesta cambiarCredencial(String usuarioApi, String passwordApi,
             Integer usuarioId, String credencial) {
         if (validarUsuario(usuarioApi, passwordApi)) {
@@ -2205,7 +2223,7 @@ public class APIOperations {
             return new Respuesta(CodigoRespuesta.ERROR_CREDENCIALES);
         }
     }
-    
+
     public RespuestaListadoTipoCuentaBancaria getTipoCuentasBancarias(String usuarioApi, String passwordApi) {
         RespuestaListadoTipoCuentaBancaria respuesta = null;
         if (validarUsuario(usuarioApi, passwordApi)) {
@@ -2217,10 +2235,10 @@ public class APIOperations {
         }
         return respuesta;
     }
-    
+
     public RespuestaListadoBancos getBancosDisponibles(String usuarioApi, String passwordApi) {
         RespuestaListadoBancos respuesta = null;
-        
+
         if (validarUsuario(usuarioApi, passwordApi)) {
             List<Banco> listaBancos = entityManager.createNamedQuery(
                     "Banco.findAll", Banco.class).getResultList();
@@ -2230,11 +2248,11 @@ public class APIOperations {
         }
         return respuesta;
     }
-    
+
     public RespuestaListadoTarjetas getTarjetasDisponibles(String usuarioApi,
             String passwordApi) {
         RespuestaListadoTarjetas respuesta = null;
-        
+
         if (validarUsuario(usuarioApi, passwordApi)) {
             Estado estado = this.getEstadoPorDescripcion(Estado.INACTIVO);
             List<Tarjeta> listaDisponible = entityManager
@@ -2245,73 +2263,73 @@ public class APIOperations {
             respuesta = new RespuestaListadoTarjetas(CodigoRespuesta.ERROR_INTERNO);
         }
         return respuesta;
-        
+
     }
-    
+
     public Respuesta solicitarTarjeta(String usuarioApi, String passwordApi, String usuarioId, String emailContacto, String direccionContacto, String telefonoContacto) {
-        
+
         if (validarUsuario(usuarioApi, passwordApi)) {
             if (usuarioId == null || usuarioId.equals("") || telefonoContacto == null || telefonoContacto.equals("") || direccionContacto == null
                     || direccionContacto.equals("") || emailContacto == null || emailContacto.equals("")) {
-                
+
                 return new Respuesta(CodigoRespuesta.DATOS_NULOS);
             }
-            
+
             Usuario usuario = entityManager.find(Usuario.class, Integer.parseInt(usuarioId));
-            
+
             RespuestaListadoTarjetas tarjetas = getTarjetasDisponibles(usuarioApi, passwordApi);
-            
+
             if (tarjetas != null && tarjetas.getDatosRespuesta() != null && tarjetas.getDatosRespuesta().size() > 0) {
-                
+
                 List<TarjetaUsuario> tarjetasusuario = entityManager.createNamedQuery("TarjetaUsuario.findByUserExistence", TarjetaUsuario.class).setParameter("usuario", usuario).setParameter("estado", Estado.INACTIVO).getResultList();
-                
+
                 if (tarjetasusuario != null && tarjetasusuario.size() > 0) {
                     return new Respuesta(CodigoRespuesta.SOLICITUD_TARJETA_ACTIVA);
                 }
-                
+
                 Tarjeta tarjeta = tarjetas.getDatosRespuesta().get(0);
-                
+
                 Estado estado = this.getEstadoPorDescripcion(Estado.PENDIENTE);
                 tarjeta.setEstadoTarjetaId(estado.getEstadoId());
                 tarjeta.setEmailContacto(emailContacto);
                 tarjeta.setDireccionContacto(direccionContacto);
                 tarjeta.setTelefonoContacto(telefonoContacto);
                 System.out.println("tarjeta Id: " + tarjeta.getTarjetaId());
-                
+
                 TarjetaUsuario asignacion = new TarjetaUsuario();
                 asignacion.setEstado(Estado.PENDIENTE);
                 asignacion.setTarjeta(tarjeta);
                 asignacion.setUsuario(usuario);
-                
+
                 TarjetaUsuarioPK llave = new TarjetaUsuarioPK();
                 llave.setTarjetaId(tarjeta.getTarjetaId());
                 llave.setUsuarioId(usuario.getUsuarioId());
-                
+
                 asignacion.setId(llave);
-                
+
                 entityManager.merge(tarjeta);
-                
+
                 entityManager.persist(asignacion);
-                
+
                 Utils.enviarCorreoSolicitarTarjeta("ES", usuario);
                 return new Respuesta(
                         CodigoRespuesta.EXITO);
             }
-            
+
         } else {
-            
+
             return new Respuesta(CodigoRespuesta.DATOS_INVALIDOS);
         }
         return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
     }
-    
+
     public Respuesta cambiarCredencialPorCorreo(String usuarioApi,
             String passwordApi, String email, String credencial) {
         if (validarUsuario(usuarioApi, passwordApi)) {
             if (email == null || email.equals("")) {
                 return new Respuesta(CodigoRespuesta.DATOS_NULOS);
             }
-            
+
             Usuario usuario = null;
             try {
                 usuario = getUsuarioporemail(Encryptor.decrypt(
@@ -2321,7 +2339,7 @@ public class APIOperations {
                 logger.debug("Error al obtener usuario: " + e);
                 return new Respuesta(CodigoRespuesta.USUARIO_NO_EXISTE);
             }
-            
+
             if (usuario == null) {
                 return new Respuesta(CodigoRespuesta.USUARIO_NO_EXISTE);
             }
@@ -2336,7 +2354,7 @@ public class APIOperations {
             return new Respuesta(CodigoRespuesta.ERROR_CREDENCIALES);
         }
     }
-    
+
     public Respuesta recuperarCredencial(String usuarioApi, String passwordApi,
             String idioma, String email) {
         if (validarUsuario(usuarioApi, passwordApi)) {
@@ -2347,15 +2365,15 @@ public class APIOperations {
             if (usuario == null) {
                 return new Respuesta(CodigoRespuesta.USUARIO_NO_EXISTE);
             }
-            
+
             Utils.enviarCorreoRecuperarCredencial(idioma, email);
-            
+
             return new Respuesta(CodigoRespuesta.EXITO);
         } else {
             return new Respuesta(CodigoRespuesta.ERROR_CREDENCIALES);
         }
     }
-    
+
     public Respuesta activarTarjeta(String usuarioApi, String passwordApi, String usuarioId, String pin) {
         Respuesta activacion = null;
         if (validarUsuario(usuarioApi, passwordApi)) {
@@ -2368,47 +2386,47 @@ public class APIOperations {
             }
             System.out.println(pin + " ---- " + usuario.getPin());
             if (pin.equals(usuario.getPin())) {
-                
+
                 List<TarjetaUsuario> tarjetas = entityManager
                         .createNamedQuery("TarjetaUsuario.findByUserState", TarjetaUsuario.class)
                         .setParameter("usuario", usuario)
                         .setParameter("estado", Estado.PENDIENTE)
                         .getResultList();
-                
+
                 if (tarjetas != null && tarjetas.size() == 1) {
                     TarjetaUsuario tarjeta = tarjetas.get(0);
                     tarjeta.setEstado(Estado.ACTIVO);
-                    
+
                     Tarjeta card = entityManager.find(Tarjeta.class, tarjeta.getId().getTarjetaId());
-                    
+
                     Estado estado = this.getEstadoPorDescripcion(Estado.ACTIVO);
                     card.setEstadoTarjetaId(estado.getEstadoId());
-                    
+
                     entityManager.persist(card);
                     entityManager.persist(tarjeta);
-                    
+
                     Utils.enviarCorreoActivacionTarjeta("ES", usuario);
-                    
+
                     return new Respuesta(CodigoRespuesta.EXITO);
-                    
-                }                
+
+                }
             } else {
                 return new Respuesta(CodigoRespuesta.CODIGO_VALIDACION_INVALIDO);
             }
         }
         return activacion;
     }
-    
+
     public Respuesta lexis(String usuarioId) throws Exception {
-        
+
         Usuario usuario = entityManager.find(Usuario.class, Integer.parseInt(usuarioId));
         if (Utils.esUsuarioFraudulento(usuario)) {
             return new Respuesta(CodigoRespuesta.EXITO);
         }
-        
+
         return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
     }
-    
+
     public Respuesta afiliarCuenta(String usuarioApi, String passwordApi,
             String usuarioId, String BancoId, String cuentaBancariaId,
             String numeroRuta, String numeroCuenta) throws ParseException {
@@ -2431,7 +2449,7 @@ public class APIOperations {
                         .createNamedQuery("CuentaBancaria.findByUser",
                                 CuentaBancaria.class)
                         .setParameter("usuario", usuario).getResultList();
-                
+
                 for (CuentaBancaria nodo : lista) {
                     CuentaBancaria CuentaTemp = nodo;
 //					if (CuentaTemp.getCuentaAlodiga() == 1) {
@@ -2439,7 +2457,7 @@ public class APIOperations {
 //					}
                     Date fechatemp = CuentaTemp.getFechaCreacion();
                     Date hoy = new Date(System.currentTimeMillis());
-                    
+
                     if (CuentaTemp.getFechaCreacion() != null
                             && ((fechatemp.getMonth() == hoy.getMonth() && fechatemp
                             .getYear() == hoy.getYear()) || hoy == fechatemp)) {
@@ -2464,10 +2482,10 @@ public class APIOperations {
                                 CodigoRespuesta.CUENTA_BANCARIA_YA_EXISTE);
                     }
                 }
-                
+
                 String modifiedDate = new SimpleDateFormat("dd/MM/yyyy")
                         .format(new Date(System.currentTimeMillis()));
-                
+
                 CuentaBancaria nuevaCuenta = new CuentaBancaria();
                 nuevaCuenta.setBanco(entityManager
                         .createNamedQuery("Banco.findById", Banco.class)
@@ -2483,7 +2501,7 @@ public class APIOperations {
                 //nuevaCuenta.setCuentaAlodiga(cuentaAlodiga);
                 nuevaCuenta.setFechaCreacion(new SimpleDateFormat("dd/MM/yyyy")
                         .parse(modifiedDate));
-                
+
                 entityManager.persist(nuevaCuenta);
                 return new Respuesta(CodigoRespuesta.EXITO);
             }
@@ -2491,30 +2509,30 @@ public class APIOperations {
         }
         return new Respuesta(CodigoRespuesta.CREDENCIALES_INVALIDAS);
     }
-    
+
     public Respuesta afiliarTarjeta(String usuarioApi, String passwordApi, String usuarioId, String pais, String estado, String ciudad, String condado, String codigoPostal, String direccion, String nombre, String numeroTarjeta, String fechaVencimiento, String tipo, String cvv) throws ParseException {
-        
+
         if (validarUsuario(usuarioApi, passwordApi)) {
-            
+
             if (usuarioId == null || usuarioId.equals("") || pais == null || pais.equals("") || estado.equals("") || estado == null || ciudad == null || ciudad.equals("") || condado.equals("") || condado == null || codigoPostal == null || codigoPostal.equals("") || direccion == null || direccion.equals("") || nombre.equals("") || nombre == null || numeroTarjeta == null || numeroTarjeta.equals("") || fechaVencimiento.equals("") || fechaVencimiento == null || tipo == null || tipo.equals("") || cvv == null || cvv.equals("")) {
                 return new Respuesta(CodigoRespuesta.DATOS_NULOS);
             }
-            
+
             Usuario usuario = entityManager.find(Usuario.class, Integer.parseInt(usuarioId));
-            
+
             if (usuario != null) {
-                
+
                 List<TarjetaUsuario> lista = entityManager.createNamedQuery("TarjetaUsuario.findByUser", TarjetaUsuario.class).setParameter("usuario", usuario).getResultList();
                 int contadorDia = 0;
                 for (TarjetaUsuario nodo : lista) {
-                    
+
                     System.out.println(nodo.getTarjeta().getNombreTarjetaHabiente() + "...." + nodo.getTarjeta().getNumeroTarjeta());
                     Tarjeta tarjetatemp = nodo.getTarjeta();
                     if (!tarjetatemp.getTipoTarjeta().equals("ALODIGA")) {
-                        
+
                         Date fechatemp = tarjetatemp.getFechaCreacion();
                         Date hoy = new Date(System.currentTimeMillis());
-                        
+
                         if (tarjetatemp.getFechaCreacion() != null && ((fechatemp.getMonth() == hoy.getMonth() && fechatemp.getYear() == hoy.getYear()) || hoy == fechatemp)) {
                             if (contadorDia == 1) {
                                 return new Respuesta(CodigoRespuesta.AFILIACIONES_MAXIMAS_ALCANZADAS);
@@ -2522,7 +2540,7 @@ public class APIOperations {
                             contadorDia++;
                         }
                     }
-                    
+
                 }
 
                 //TODO validacion de transacción tarjeta de credito
@@ -2532,31 +2550,31 @@ public class APIOperations {
                 address.setCiudadId(Integer.parseInt(ciudad));
                 address.setCondadoId(Integer.parseInt(condado));
                 address.setDireccion(direccion);
-                
+
                 entityManager.persist(address);
                 Estado state = this.getEstadoPorDescripcion(Estado.ACTIVO);
-                
+
                 Tarjeta tarjeta = new Tarjeta();
                 tarjeta.setTipoTarjeta(tipo);
                 tarjeta.setEstadoTarjetaId(state.getEstadoId());
-                tarjeta.setDireccion(address);                
+                tarjeta.setDireccion(address);
                 tarjeta.setNombreTarjetaHabiente(nombre);
                 tarjeta.setNumeroTarjeta(numeroTarjeta);
                 tarjeta.setFechaVencimiento(fechaVencimiento);
-                
+
                 String modifiedDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date(System.currentTimeMillis()));
                 tarjeta.setFechaCreacion(new SimpleDateFormat("dd/MM/yyyy").parse(modifiedDate));
-                
+
                 TarjetaUsuarioPK llave = new TarjetaUsuarioPK();
                 llave.setTarjetaId(tarjeta.getTarjetaId());
                 llave.setUsuarioId(usuario.getUsuarioId());
-                
+
                 TarjetaUsuario asignacion = new TarjetaUsuario();
                 asignacion.setTarjeta(tarjeta);
                 asignacion.setUsuario(usuario);
                 asignacion.setEstado(Estado.ACTIVO);
                 asignacion.setId(llave);
-                
+
                 entityManager.persist(asignacion);
                 return new Respuesta(CodigoRespuesta.EXITO);
             } else {
@@ -2565,12 +2583,12 @@ public class APIOperations {
         }
         return new Respuesta(CodigoRespuesta.CREDENCIALES_INVALIDAS);
     }
-    
+
     private List<Estado> findAllEstados() {
         return entityManager.createNamedQuery("Estado.findAll", Estado.class)
                 .getResultList();
     }
-    
+
     private List<Usuario> getAgentesComercialesPorEmpresa(String empresaId,
             String tipoPersona) {
         List<Usuario> usuarios = new ArrayList<Usuario>();
@@ -2579,18 +2597,18 @@ public class APIOperations {
                     .createNamedQuery("Usuario.findUserAloPos", Usuario.class)
                     .setParameter("empresaId", Integer.parseInt(empresaId))
                     .setParameter("tipoPersona", tipoPersona).getResultList();
-            
+
         } catch (Exception e) {
             e.printStackTrace();
         }
         return usuarios;
-        
+
     }
 
     public RespuestaListadoUsuarios getAgentesComercialesPorEmpresa(
             String usuarioApi, String passwordApi, String empresaId,
             String tipoPersona) {
-        
+
         if (validarUsuario(usuarioApi, passwordApi)) {
             List<Usuario> usuarios = getAgentesComercialesPorEmpresa(empresaId,
                     tipoPersona);
@@ -2601,24 +2619,24 @@ public class APIOperations {
                     CodigoRespuesta.ERROR_CREDENCIALES);
         }
     }
-    
+
     public RespuestaListadoEstados obtenerEstadosUsuario(String usuarioApi,
             String passwordApi) {
         RespuestaListadoEstados respuesta = null;
-        
+
         if (validarUsuario(usuarioApi, passwordApi)) {
             List<Estado> estados = this.findAllEstados();
-            
+
             respuesta = new RespuestaListadoEstados(CodigoRespuesta.EXITO,
                     null, estados);
-            
+
         } else {
             respuesta = new RespuestaListadoEstados(
                     CodigoRespuesta.ERROR_INTERNO);
         }
         return respuesta;
     }
-    
+
     public RespuestaGuardarUsuario guardarAgenteComercial(String usuarioApi,
             String passwordApi, String usuarioId, String usuarioEmpresaId,
             String nombre, String apellido, String credencial, String email,
@@ -2628,7 +2646,7 @@ public class APIOperations {
             String estado, String tipoDocumento, String numeroDocumento,
             String numeroIdentificacion, String telefono) {
         try {
-            
+
             if (validarUsuario(usuarioApi, passwordApi)) {
                 // String codigoGenerado = "";
                 Usuario usuario;
@@ -2658,7 +2676,7 @@ public class APIOperations {
                                 Utils.obtieneMensaje("invalid.lastname"));
                     }
                 }
-                
+
                 if (usuarioId == null || usuarioId.equals("")) {
                     usuario = new Usuario();
                     direccion1 = new Direccion();
@@ -2751,7 +2769,7 @@ public class APIOperations {
                 logger.debug("direccion1: --->" + direccion1);
                 // logger.debug("cuenta: --->" + cuenta);
                 Usuario usuarioEmpresa = getUsuarioporId(usuarioEmpresaId);
-                
+
                 if (usuarioId == null) {
                     Cuenta cuenta = new Cuenta();
                     cuenta.setSaldoAlocoins(0d);
@@ -2759,12 +2777,12 @@ public class APIOperations {
                     cuenta.setSaldoHealthCareCoins(0d);
                     cuenta.setNumeroCuenta(Utils.generarNumeroDeCuenta());
                     usuario.setCuenta(cuenta);
-                    
+
                     entityManager.persist(usuario);
-                    
+
                     guardarPerfilAloPosComercial(usuarioApi, passwordApi,
                             usuario, usuarioEmpresa, fechaVencimientoDocumento);
-                    
+
                     logger.info("**************Sending email to user ********************"
                             + usuario.getNombre());
                     Utils.enviarCorreUsuarioNuevo("ES", usuario, link);
@@ -2775,7 +2793,7 @@ public class APIOperations {
                                 usuario, usuarioEmpresa,
                                 fechaVencimientoDocumento);
                     }
-                    
+
                 }
                 return new RespuestaGuardarUsuario(CodigoRespuesta.EXITO,
                         CodigoRespuesta.EXITO.name(), usuario);
@@ -2794,23 +2812,23 @@ public class APIOperations {
                     + e.getCause() + e.getStackTrace());
         }
     }
-    
+
     public RespuestaGuardarUsuario guardarPerfilAloPosComercial(
             String usuarioApi, String passwordApi, Usuario usuario,
             Usuario usuarioEmpresa, String fechaVencimientoDocumento) {
-        
+
         if (!validarUsuario(usuarioApi, passwordApi)) {
             return new RespuestaGuardarUsuario(
                     CodigoRespuesta.ERROR_CREDENCIALES);
         }
-        
+
         try {
             logger.info("********** validando perfil alopos");
             if (usuario == null || usuarioEmpresa == null
                     || fechaVencimientoDocumento == null) {
                 return new RespuestaGuardarUsuario(CodigoRespuesta.DATOS_NULOS);
             }
-            
+
             Aplicacion aplicacion = getAplicacionporNombre("ALOPOS");
             List<Aplicacion> app = new ArrayList<Aplicacion>();
             if (usuario.getAplicaciones() == null) {
@@ -2819,11 +2837,11 @@ public class APIOperations {
             } else {
                 usuario.getAplicaciones().add(aplicacion);
             }
-            
+
             PerfilAloPos perfil = new PerfilAloPos();
-            
+
             if (usuario.getPerfilAloPos() == null) {
-                
+
                 perfil.setEmpresa(usuarioEmpresa.getPerfilAloPos().getEmpresa());
                 perfil.setTipoPersona("NATURAL");
                 DateFormat format = new SimpleDateFormat("dd-MM-yyyy",
@@ -2845,49 +2863,49 @@ public class APIOperations {
         }
         return new RespuestaGuardarUsuario(CodigoRespuesta.EXITO, null, usuario);
     }
-    
+
     public Respuesta transferirAlocoins(String usuarioId1, String usuarioId2, String usuarioApi, String passwordApi, String alocoins) {
         Respuesta respuesta = null;
         if (!validarUsuario(usuarioApi, passwordApi)) {
             return new Respuesta(
                     CodigoRespuesta.ERROR_CREDENCIALES);
         }
-        
+
         if (usuarioId1 == null || usuarioId1.equals("") || usuarioId2 == null || usuarioId2.equals("")
                 || alocoins == null || alocoins.equals("")) {
-            
+
             return new Respuesta(CodigoRespuesta.DATOS_NULOS);
-            
+
         } else {
-            
+
             Usuario usuario1 = entityManager.find(Usuario.class, Integer.parseInt(usuarioId1));
             Usuario usuario2 = entityManager.find(Usuario.class, Integer.parseInt(usuarioId2));
-            
+
             if (usuario1 != null && usuario2 != null) {
                 double alocoins_cuenta = usuario1.getCuenta().getSaldoAlocoins();
-                
+
                 usuario1.getCuenta().setSaldoAlocoins(alocoins_cuenta - Integer.parseInt(alocoins));
                 usuario2.getCuenta().setSaldoAlocoins(usuario2.getCuenta().getSaldoAlocoins() + Integer.parseInt(alocoins));
-                
+
                 entityManager.persist(usuario1);
                 entityManager.persist(usuario2);
-                
+
                 String mensaje = "";
-                
+
                 mensaje = "Se ha realizado la transferencia a " + usuario2.getNombre() + " " + usuario2.getApellido() + " exitosamente.<br/>"
                         + "Resumen<br/>"
                         + "Alocoins enviados: " + alocoins + "<br/>"
                         + "Fecha: " + (new Date().toLocaleString());
-                
+
                 Utils.enviarCorreoTransferenciaAlocoins("ES", usuario1, mensaje);
-                
+
                 return new Respuesta(CodigoRespuesta.EXITO);
             }
         }
-        
+
         return respuesta;
     }
-    
+
     public RespuestaUsuario getUsuarioPorTarjeta(String usuarioApi,
             String passwordApi, String tarjeta) {
         try {
@@ -2933,7 +2951,7 @@ public class APIOperations {
                     e.getMessage());
         }
     }
-    
+
     public Respuesta recuperarPassword(String usuarioApi, String passwordApi,
             String idioma, String email, String cliente) {
         if (validarUsuario(usuarioApi, passwordApi)) {
@@ -2944,19 +2962,19 @@ public class APIOperations {
             if (usuario == null) {
                 return new Respuesta(CodigoRespuesta.USUARIO_NO_EXISTE);
             }
-            
+
             if (cliente.equals(Constante.sCLIENTE_RRP)) {
                 Utils.enviarCorreoRecuperarCredencialRRP(idioma, email);
             } else {
                 Utils.enviarCorreoRecuperarCredencial(idioma, email);
             }
-            
+
             return new Respuesta(CodigoRespuesta.EXITO);
         } else {
             return new Respuesta(CodigoRespuesta.ERROR_CREDENCIALES);
         }
     }
-    
+
     public RespuestaNuevoToken loginSocialNetwork(String usuarioApi, String passwordApi,
             String email, String movil, String ip) {
         if (!validarUsuario(usuarioApi, passwordApi)) {
@@ -3016,94 +3034,91 @@ public class APIOperations {
         Accion action = entityManager
                 .createNamedQuery("Accion.byDescripcion", Accion.class)
                 .setParameter("descripcion", Accion.LOGIN).getSingleResult();
-        
+
         entityManager.persist(new Bitacora(ip, action, usuario));
         entityManager.persist(sesion);
         entityManager.merge(usuario);
         return new RespuestaNuevoToken(CodigoRespuesta.EXITO,
                 CodigoRespuesta.EXITO.name(), token);
     }
-    
 
-    
-     public String testEncript(String usuarioApi, String passwordApi,
-             String textValue) {
+    public String testEncript(String usuarioApi, String passwordApi,
+            String textValue) {
         if (validarUsuario(usuarioApi, passwordApi)) {
-            
+
             try {
                 String value = S3cur1ty3Cryt3r.aloDesencript(textValue, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
-                return  value;
+                return value;
             } catch (NoSuchAlgorithmException ex) {
                 ex.printStackTrace();
                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return  "error";
+                return "error";
             } catch (IllegalBlockSizeException ex) {
                 ex.printStackTrace();
                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return  "error";
+                return "error";
             } catch (NoSuchPaddingException ex) {
                 ex.printStackTrace();
                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return  "error";
+                return "error";
             } catch (BadPaddingException ex) {
                 ex.printStackTrace();
                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return  "error";
+                return "error";
             } catch (KeyLongException ex) {
                 ex.printStackTrace();
                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return  "error";
+                return "error";
             } catch (Exception ex) {
                 ex.printStackTrace();
                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return  "error";
+                return "error";
             }
-         
+
         } else {
-            return  "error";
+            return "error";
         }
     }
-     
-      public String testDesencript(String usuarioApi, String passwordApi,
-             String textValue) {
+
+    public String testDesencript(String usuarioApi, String passwordApi,
+            String textValue) {
         if (validarUsuario(usuarioApi, passwordApi)) {
-            
+
             try {
                 String value = S3cur1ty3Cryt3r.aloEncrpter(textValue, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
-                return  value;
+                return value;
             } catch (NoSuchAlgorithmException ex) {
                 ex.printStackTrace();
                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return  "error";
+                return "error";
             } catch (IllegalBlockSizeException ex) {
                 ex.printStackTrace();
                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return  "error";
+                return "error";
             } catch (NoSuchPaddingException ex) {
                 ex.printStackTrace();
                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return  "error";
+                return "error";
             } catch (BadPaddingException ex) {
                 ex.printStackTrace();
                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return  "error";
+                return "error";
             } catch (KeyLongException ex) {
                 ex.printStackTrace();
                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return  "error";
+                return "error";
             } catch (Exception ex) {
                 ex.printStackTrace();
                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                return  "error";
+                return "error";
             }
-         
+
         } else {
-            return  "error";
+            return "error";
         }
     }
-      
-      
-      public RespuestaUsuario validarPin(String usuarioApi,
+
+    public RespuestaUsuario validarPin(String usuarioApi,
             String passwordApi, Integer usuarioId, String clave) {
         if (validarUsuario(usuarioApi, passwordApi)) {
             try {
@@ -3111,20 +3126,19 @@ public class APIOperations {
                 claveOperacionesCifrada = S3cur1ty3Cryt3r.aloEncrpter(clave, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
                 claveOperacionesCifrada = Utils.MD5(claveOperacionesCifrada);
                 //Usuario a comparar
-                Usuario usuario = entityManager.find(Usuario.class,usuarioId);
+                Usuario usuario = entityManager.find(Usuario.class, usuarioId);
                 if (!usuario.getPin().equals(claveOperacionesCifrada)) {
-                      return new RespuestaUsuario(CodigoRespuesta.PIN_INVALIDO);
-                }else{
-                      return new RespuestaUsuario(CodigoRespuesta.EXITO);
+                    return new RespuestaUsuario(CodigoRespuesta.PIN_INVALIDO);
+                } else {
+                    return new RespuestaUsuario(CodigoRespuesta.EXITO);
                 }
             } catch (NoSuchAlgorithmException ex) {
-                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
-                 return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
-            }catch (NoResultException ex) {
                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
                 return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
-            } 
-            catch (UnsupportedEncodingException ex) {
+            } catch (NoResultException ex) {
+                java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
+                return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+            } catch (UnsupportedEncodingException ex) {
                 java.util.logging.Logger.getLogger(APIOperations.class.getName()).log(Level.SEVERE, null, ex);
                 return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
             } catch (IllegalBlockSizeException ex) {
@@ -3147,52 +3161,51 @@ public class APIOperations {
             return new RespuestaUsuario(CodigoRespuesta.ERROR_CREDENCIALES);
         }
     }
-      
+
     public RespuestaUsuario listadoProductosPorUsuario(String usuarioApi, String passwordApi, Integer usuarioId) {
         if (validarUsuario(usuarioApi, passwordApi)) {
             try {
-            Usuario usuario = entityManager.find(Usuario.class, usuarioId);
-            APIAlodigaWalletProxy alodigaWalletProxy = new APIAlodigaWalletProxy();
-            ProductListResponse productListResponse;
-            try {
-                productListResponse = alodigaWalletProxy.getProductsByUserId(String.valueOf(usuarioId));
-            } catch (RemoteException ex) {
-                return new RespuestaUsuario(CodigoRespuesta.EXITO);
-            }
-            List<RespuestaListadoProducto> respuestaListadoProductos = new ArrayList<RespuestaListadoProducto>();
-            for (Product p : productListResponse.getProducts()) {
-                BalanceHistoryResponse balanceHistoryResponse = new BalanceHistoryResponse();
-                Float currentBalanceProduct = 0F;
+                Usuario usuario = entityManager.find(Usuario.class, usuarioId);
+                APIAlodigaWalletProxy alodigaWalletProxy = new APIAlodigaWalletProxy();
+                ProductListResponse productListResponse;
                 try {
-                    balanceHistoryResponse = alodigaWalletProxy.getBalanceHistoryByProductAndUser(Long.valueOf(usuarioId), p.getId());
-                    if (balanceHistoryResponse.getCodigoRespuesta().equals(Constante.NOT_BALANCE_HISTORY_AVAILABLE_CODE)) {
-                        //No tiene producto asociado
-                        currentBalanceProduct = 0F;
-                    } else {
-                        currentBalanceProduct = balanceHistoryResponse.getResponse().getCurrentAmount();
-                    }
+                    productListResponse = alodigaWalletProxy.getProductsByUserId(String.valueOf(usuarioId));
                 } catch (RemoteException ex) {
-                    return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+                    return new RespuestaUsuario(CodigoRespuesta.EXITO);
                 }
-                respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSymbol(), p.isIsPayTopUp()));
-            }
-            usuario.setRespuestaListadoProductos(respuestaListadoProductos);
-            return new RespuestaUsuario(CodigoRespuesta.EXITO, CodigoRespuesta.EXITO.name(), usuario); 
+                List<RespuestaListadoProducto> respuestaListadoProductos = new ArrayList<RespuestaListadoProducto>();
+                for (Product p : productListResponse.getProducts()) {
+                    BalanceHistoryResponse balanceHistoryResponse = new BalanceHistoryResponse();
+                    Float currentBalanceProduct = 0F;
+                    try {
+                        balanceHistoryResponse = alodigaWalletProxy.getBalanceHistoryByProductAndUser(Long.valueOf(usuarioId), p.getId());
+                        
+                        if (balanceHistoryResponse.getCodigoRespuesta().equals(Constante.NOT_BALANCE_HISTORY_AVAILABLE_CODE)) {
+                            //No tiene producto asociado
+                            currentBalanceProduct = 0F;
+                        } else {
+                            currentBalanceProduct = balanceHistoryResponse.getResponse().getCurrentAmount();
+                        }
+                    } catch (RemoteException ex) {
+                        return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+                    }
+                    respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSymbol(), p.isIsPayTopUp()));
+                }
+                usuario.setRespuestaListadoProductos(respuestaListadoProductos);
+                return new RespuestaUsuario(CodigoRespuesta.EXITO, CodigoRespuesta.EXITO.name(), usuario);
             } catch (Exception e) {
                 e.printStackTrace();
                 return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
             }
-           
+
         } else {
             return new RespuestaUsuario(CodigoRespuesta.ERROR_CREDENCIALES);
         }
 
     }
 
-              
-    
     public void sendmailTest() {
-        
+
         Usuario usuario = new Usuario();
         usuario.setNombre("Kerwin");
         usuario.setApellido("Gomez");
@@ -3207,22 +3220,21 @@ public class APIOperations {
         transaction.getId();
         transaction.getTotalAmount();
         transaction.setTotalAmount(Float.valueOf("2"));
-      
+
         Mail mail = Utils.enviarCorreRecuperarContraseñaAplicacionMovil("ES", usuario);
         System.out.println("body: " + mail.getBody());
-                try {
-                    //Envio de Correo Electronico
+        try {
+            //Envio de Correo Electronico
 //                    EnvioCorreo.enviarCorreoHtml(new String[]{mail.getTo().get(0)},
 //                mail.getSubject(),  mail.getBody(), Utils.obtienePropiedad("mail.user"), null);
-                    
+
             AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
-            
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
-    
-    
+
     public void sendSmsTest() {
         String message = null;
         Usuario usuario = new Usuario();
@@ -3231,33 +3243,29 @@ public class APIOperations {
         usuario.setCredencial("DAnye");
         usuario.setEmail("moisegrat12@gmail.com");
         usuario.setMovil("12082624868");
-      
-        
-       message = getLangujeByPhoneNumber(usuario.getMovil()).equals(Constante.SPANISH_LANGUAGE) ? "Billetera Alodiga, Usted se ha registrado satisfactoriamente: " + new Timestamp(new java.util.Date().getTime()) + " " +  usuario.getEmail() : "Alodiga Wallet, You have successfully registered: " + new Timestamp(new java.util.Date().getTime()) + " " + usuario.getEmail() ;
-        
-                try {
+
+        message = getLangujeByPhoneNumber(usuario.getMovil()).equals(Constante.SPANISH_LANGUAGE) ? "Billetera Alodiga, Usted se ha registrado satisfactoriamente: " + new Timestamp(new java.util.Date().getTime()) + " " + usuario.getEmail() : "Alodiga Wallet, You have successfully registered: " + new Timestamp(new java.util.Date().getTime()) + " " + usuario.getEmail();
+
+        try {
             //String message = getLangujeByPhoneNumber(movil).equals(Constante.SPANISH_LANGUAGE) ? "Billetera Alodiga, Su codigo de seguridad para el registro es: " + codigo : "Alodiga Wallet, Your security code is: " + codigo ;
             TwilioSmsSenderProxy proxy = new TwilioSmsSenderProxy();
             proxy.sendTwilioSMS(usuario.getMovil(), message);
 
         } catch (RemoteException ex) {
-           ex.printStackTrace();
+            ex.printStackTrace();
         }
     }
-    
-    
-    private Long getLangujeByPhoneNumber(String phone){
-           if(phone.substring(0, 1).equals("1")){
-               return Constante.ENGLISH_LANGUAGE;
-            }else{
-                return Constante.SPANISH_LANGUAGE; 
-           }
+
+    private Long getLangujeByPhoneNumber(String phone) {
+        if (phone.substring(0, 1).equals("1")) {
+            return Constante.ENGLISH_LANGUAGE;
+        } else {
+            return Constante.SPANISH_LANGUAGE;
+        }
     }
-    
-    
+
     public static void main(String[] args) {
-        
-        
+
         Usuario usuario = new Usuario();
         usuario.setNombre("Kerwin");
         usuario.setApellido("Gomez");
@@ -3268,25 +3276,19 @@ public class APIOperations {
         cunCuenta.setNumeroCuenta("01050614154515461528");
         usuario.setCuenta(cunCuenta);
         Mail mail = Utils.enviarCorreUsuarioNuevoAplicacionMovil("ES", usuario);
-                try {
+        try {
             AmazonSESSendMail.SendMail(mail.getSubject(), mail.getBody(), mail.getTo().get(0));
             //Envio de Correo Electronico
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        
-        
+
     }
-    
-    
-    
-    
-    
-    
+
     public Respuesta sendSmsSimbox(String usuarioApi, String passwordApi, String text, String phoneNumber) {
         if (validarUsuario(usuarioApi, passwordApi)) {
             try {
-                 String response = Utils.sendSmsSimbox(text, phoneNumber);
+                String response = Utils.sendSmsSimbox(text, phoneNumber);
             } catch (Exception e) {
                 return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
             }
@@ -3296,14 +3298,13 @@ public class APIOperations {
         }
     }
 
-
     public Respuesta cambiarCredencialAplicacionMovil(String usuarioApi, String passwordApi,
             Integer usuarioId, String credencial) {
         if (validarUsuario(usuarioApi, passwordApi)) {
             if (usuarioId == null || usuarioId == 0) {
                 return new Respuesta(CodigoRespuesta.DATOS_NULOS);
             }
-            
+
             Usuario usuario = entityManager.find(Usuario.class, usuarioId);
             if (usuario == null) {
                 return new Respuesta(CodigoRespuesta.USUARIO_NO_EXISTE);
@@ -3335,17 +3336,16 @@ public class APIOperations {
             }
             entityManager.merge(usuario);
             SendMailTherad sendMailTherad = new SendMailTherad("ES", usuario, Integer.valueOf("2"));
-                    sendMailTherad.run();
+            sendMailTherad.run();
             return new Respuesta(CodigoRespuesta.EXITO);
         } else {
             return new Respuesta(CodigoRespuesta.ERROR_CREDENCIALES);
         }
     }
-    
-    
-     public RespuestaCodigoRandom generarCodigoMovilSMSAplicacionMovil(String usuarioApi,
+
+    public RespuestaCodigoRandom generarCodigoMovilSMSAplicacionMovil(String usuarioApi,
             String passwordApi, String phoneNumber, String email) {
-        if (validarUsuario(usuarioApi, passwordApi)) { 
+        if (validarUsuario(usuarioApi, passwordApi)) {
             String codigo = "";
             try {
                 Random r = new Random();
@@ -3353,13 +3353,13 @@ public class APIOperations {
                 while (i < 6) {
                     codigo += "" + r.nextInt(10);
                     i++;
-                }            
-                Usuario usuario = getLoginUsuario(email, phoneNumber);      
+                }
+                Usuario usuario = getLoginUsuario(email, phoneNumber);
                 MovilCodigo mc;
                 try {
-                     mc = new MovilCodigo(usuario.getMovil(), codigo);
+                    mc = new MovilCodigo(usuario.getMovil(), codigo);
                 } catch (NullPointerException e) {
-                         return new RespuestaCodigoRandom(CodigoRespuesta.USUARIO_NO_EXISTE);
+                    return new RespuestaCodigoRandom(CodigoRespuesta.USUARIO_NO_EXISTE);
                 }
                 SendSmsThread sendSmsThread = new SendSmsThread(usuario.getMovil(), codigo, Integer.valueOf("3"));
                 sendSmsThread.start();
@@ -3374,18 +3374,17 @@ public class APIOperations {
             return new RespuestaCodigoRandom(CodigoRespuesta.ERROR_CREDENCIALES);
         }
     }
-    
-    
-     public Respuesta cambiarCredencialAplicacionMovilEmailOrPhone(String usuarioApi, String passwordApi,
+
+    public Respuesta cambiarCredencialAplicacionMovilEmailOrPhone(String usuarioApi, String passwordApi,
             String phoneOrEmail, String credencial) {
         if (validarUsuario(usuarioApi, passwordApi)) {
-           Usuario usuario = null;
-            
+            Usuario usuario = null;
+
             if (Utils.isStringValido(phoneOrEmail)) {
-                if(Utils.EsNumeroDeTelefono(phoneOrEmail)){
-                   usuario = getUsuariopormovil(phoneOrEmail); 
-                }else{
-                   usuario = getUsuarioporemail(phoneOrEmail);
+                if (Utils.EsNumeroDeTelefono(phoneOrEmail)) {
+                    usuario = getUsuariopormovil(phoneOrEmail);
+                } else {
+                    usuario = getUsuarioporemail(phoneOrEmail);
                 }
             }
             if (usuario == null) {
@@ -3418,15 +3417,11 @@ public class APIOperations {
             }
             entityManager.merge(usuario);
             SendMailTherad sendMailTherad = new SendMailTherad("ES", usuario, Integer.valueOf("2"));
-                    sendMailTherad.run();
+            sendMailTherad.run();
             return new Respuesta(CodigoRespuesta.EXITO);
         } else {
             return new Respuesta(CodigoRespuesta.ERROR_CREDENCIALES);
         }
     }
-     
-     
-}
-    
-    
 
+}

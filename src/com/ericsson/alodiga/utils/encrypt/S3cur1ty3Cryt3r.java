@@ -86,7 +86,7 @@ public class S3cur1ty3Cryt3r {
         try {
             enc = aloDesencript(value, "1nt3r4xt3l3ph0ny", value, "DESede","0123456789ABCDEF");
             System.out.println(enc);
-            String desc = aloEncrpter("", "1nt3r4xt3l3ph0ny", null, "DESede","0123456789ABCDEF");
+            String desc = aloEncrpter("maria,d,tercerparametro,p", "1nt3r4xt3l3ph0ny", null, "DESede","0123456789ABCDEF");
             System.out.println(desc);
         } catch (InvalidKeyException ex) {
             Logger.getLogger(S3cur1ty3Cryt3r.class.getName()).log(Level.SEVERE, null, ex);

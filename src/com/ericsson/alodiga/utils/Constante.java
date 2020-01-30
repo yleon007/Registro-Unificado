@@ -142,5 +142,16 @@ public class Constante {
     public static final String VALIDATED = "51";
     public static final String EXPIRATED = "52";
     public static final String NOT_VALIDATE = "53";
+    
+    public static final Boolean HAS_PREPAY_CARD_ASOCIATED =  true;
+    public static final Boolean NOT_HAS_PREPAY_CARD_ASOCIATED =  false;
+    public static final Boolean HAS_PREPAY_CARD =  true;
+        public static final Boolean NOT_HAS_PREPAY_CARD =  false;
+    
+    public static final Long CREDENTIAL_PREPAY_CARD = 3L;
+    //SIN VALIDAR USUARIO PRIMER INGRESO
+    public static final Long SIN_VALIDAR = 4L;
+    
+    
 
 }
