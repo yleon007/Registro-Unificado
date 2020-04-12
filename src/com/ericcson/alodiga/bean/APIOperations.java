@@ -4,7 +4,6 @@ import com.alodiga.twilio.sms.services.TwilioSmsSenderProxy;
 import com.alodiga.wallet.ws.APIAlodigaWalletProxy;
 import com.alodiga.wallet.ws.BalanceHistoryResponse;
 import com.alodiga.wallet.ws.CardResponse;
-import com.alodiga.wallet.ws.CumplimientListResponse;
 import com.alodiga.wallet.ws.CumplimientResponse;
 import com.alodiga.wallet.ws.Product;
 import com.alodiga.wallet.ws.ProductListResponse;
@@ -556,7 +555,7 @@ public class APIOperations {
                             CodigoRespuesta.DATOS_INVALIDOS, "PAIS_NULO");
                 }
                 logger.debug("saving user " + usuario.getNombre());
-                usuario.setApellido(apellido);
+                usuario.setApellido(apellido + " " + apellido);
                 direccion1.setCiudadId(!StringUtils.isEmpty(ciudadId) ? Integer
                         .parseInt(ciudadId) : 0);
                 direccion1
@@ -591,7 +590,7 @@ public class APIOperations {
                     usuario.setFechaNacimiento(date);
                 }
                 usuario.setMovil(movil);
-                usuario.setNombre(nombre);
+                usuario.setNombre(nombre + " " + nombre);
                 String valueCredencial = S3cur1ty3Cryt3r.aloEncrpter(credencial, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
                 usuario.setCredencial(Utils.MD5(valueCredencial));
                 usuario.setCredencialFecha(new Date());
@@ -1679,7 +1678,12 @@ public class APIOperations {
             APIAlodigaWalletProxy alodigaWalletProxy = new APIAlodigaWalletProxy();
             ProductListResponse productListResponse;
             try {
+                
+               
                 productListResponse = alodigaWalletProxy.getProductsByUserId(String.valueOf(usuario.getUsuarioId()));
+                
+                
+                
 
             } catch (RemoteException ex) {
                 ex.printStackTrace();
@@ -1713,6 +1717,7 @@ public class APIOperations {
         SesionUsuario sesion = new SesionUsuario();
         sesion.setActivo(true);
         sesion.setDireccionConfianza(direccion);
+        usuario.setCountrySourceId(usuario.getDireccion().getPaisId());
         sesion.setFechaActividad(new Date());
         sesion.setUsuario(usuario);
         String token = UUID.randomUUID().toString();
@@ -3265,7 +3270,6 @@ public class APIOperations {
     }
 
     public static void main(String[] args) {
-
         Usuario usuario = new Usuario();
         usuario.setNombre("Kerwin");
         usuario.setApellido("Gomez");
@@ -3282,7 +3286,6 @@ public class APIOperations {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-
     }
 
     public Respuesta sendSmsSimbox(String usuarioApi, String passwordApi, String text, String phoneNumber) {
