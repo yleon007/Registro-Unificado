@@ -1,14 +1,11 @@
 package com.ericsson.alodiga.utils;
 
-import com.alodiga.twilio.sms.services.TwilioSmsSender;
+import com.alodiga.massiva.sms.SendSmsMassiva;
 import com.alodiga.twilio.sms.services.TwilioSmsSenderProxy;
-import com.ericcson.alodiga.bean.APIOperations;
 import com.ericsson.alodiga.model.Usuario;
 import java.rmi.RemoteException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class SendSmsThread extends Thread {
 
@@ -67,8 +64,11 @@ public class SendSmsThread extends Thread {
             } else if (movil.substring(0, 2).equals("58")) {
                 //Venezuela  integras con simbox
                 //APIOperations aPIOperations = new APIOperations();
+                SendSmsMassiva sendSmsMassiva = new SendSmsMassiva();
                 try {
                     //aPIOperations.sendSmsSimbox(Constante.USER_API, Constante.PASSWORD_API, message, movil);
+                    sendSmsMassiva.sendSmsMassiva(message, movil);
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
