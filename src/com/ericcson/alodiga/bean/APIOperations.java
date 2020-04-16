@@ -3338,7 +3338,7 @@ public class APIOperations {
                 return new Respuesta(CodigoRespuesta.ERROR_INTERNO);
             }
             entityManager.merge(usuario);
-            SendMailTherad sendMailTherad = new SendMailTherad("ES", usuario, Integer.valueOf("2"));
+            SendMailTherad sendMailTherad = new SendMailTherad("ES", usuario, 2);
             sendMailTherad.run();
             return new Respuesta(CodigoRespuesta.EXITO);
         } else {
@@ -3364,7 +3364,7 @@ public class APIOperations {
                 } catch (NullPointerException e) {
                     return new RespuestaCodigoRandom(CodigoRespuesta.USUARIO_NO_EXISTE);
                 }
-                SendSmsThread sendSmsThread = new SendSmsThread(usuario.getMovil(), codigo, Integer.valueOf("3"));
+                SendSmsThread sendSmsThread = new SendSmsThread(usuario.getMovil(), codigo, 2);
                 sendSmsThread.start();
 
                 entityManager.persist(mc);

@@ -477,7 +477,7 @@ public class APIRegistroUnificado {
     }
 
     @WebMethod
-    public Respuesta generarCodigoMovilSMS(
+    public RespuestaCodigoRandom generarCodigoMovilSMS(
             @WebParam(name = "usuarioApi") String usuarioApi,
             @WebParam(name = "passwordApi") String passwordApi,
             @WebParam(name = "movil") String movil) {
@@ -485,7 +485,7 @@ public class APIRegistroUnificado {
     }
     
     @WebMethod
-    public Respuesta generarCodigoMovilSMSAplicacionMovil(
+    public RespuestaCodigoRandom generarCodigoMovilSMSAplicacionMovil(
             @WebParam(name = "usuarioApi") String usuarioApi,
             @WebParam(name = "passwordApi") String passwordApi,
             @WebParam(name = "movil") String movil, 
