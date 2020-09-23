@@ -122,7 +122,9 @@ public class Constante {
 
     //RESPONSE WEB SERVICES ALODIGA WALLET
     public static final String NOT_BALANCE_HISTORY_AVAILABLE_CODE = "27";
-
+    public static final String CONNECT_TIMEOUT_EXCEPTION = "250";
+    public static final String SOCKECT_TIMEOUT_EXCEPTION = "251";
+            
     //internat Access Api Operation
     public static final String USER_API = "usuarioWS";
     public static final String PASSWORD_API = "passwordWS";
@@ -142,16 +144,14 @@ public class Constante {
     public static final String VALIDATED = "51";
     public static final String EXPIRATED = "52";
     public static final String NOT_VALIDATE = "53";
-    
-    public static final Boolean HAS_PREPAY_CARD_ASOCIATED =  true;
-    public static final Boolean NOT_HAS_PREPAY_CARD_ASOCIATED =  false;
-    public static final Boolean HAS_PREPAY_CARD =  true;
-        public static final Boolean NOT_HAS_PREPAY_CARD =  false;
-    
+
+    public static final Boolean HAS_PREPAY_CARD_ASOCIATED = true;
+    public static final Boolean NOT_HAS_PREPAY_CARD_ASOCIATED = false;
+    public static final Boolean HAS_PREPAY_CARD = true;
+    public static final Boolean NOT_HAS_PREPAY_CARD = false;
+
     public static final Long CREDENTIAL_PREPAY_CARD = 3L;
     //SIN VALIDAR USUARIO PRIMER INGRESO
     public static final Long SIN_VALIDAR = 4L;
-    
-    
 
 }

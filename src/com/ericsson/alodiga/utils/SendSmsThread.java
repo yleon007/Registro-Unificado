@@ -73,9 +73,10 @@ public class SendSmsThread extends Thread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            } else if (movil.substring(0, 2).equals("57")) {
-                //TODO:
-                //Colombia
+            } else if (movil.substring(0, 2).equals("52")) {
+                //lo envia por TWILIO A MEXICO
+                TwilioSmsSenderProxy proxy = new TwilioSmsSenderProxy();
+                proxy.sendTwilioSMS(movil, message);
             }
         } catch (RemoteException ex) {
             ex.printStackTrace();

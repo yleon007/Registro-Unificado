@@ -1692,7 +1692,7 @@ public class APIOperations {
                 Float currentBalanceProduct = 0F;
                 try {
                     balanceHistoryResponse = alodigaWalletProxy.getBalanceHistoryByProductAndUser(Long.valueOf(usuario.getUsuarioId()), p.getId());
-                    if (balanceHistoryResponse.getCodigoRespuesta().equals(Constante.NOT_BALANCE_HISTORY_AVAILABLE_CODE)) {
+                    if (balanceHistoryResponse.getCodigoRespuesta().equals(Constante.NOT_BALANCE_HISTORY_AVAILABLE_CODE) || balanceHistoryResponse.getCodigoRespuesta().equals(Constante.CONNECT_TIMEOUT_EXCEPTION) || balanceHistoryResponse.getCodigoRespuesta().equals(Constante.SOCKECT_TIMEOUT_EXCEPTION) || balanceHistoryResponse.getCodigoRespuesta().equals(Constante.sERR_COD_99)) {
                         //No tiene producto asociado
                         currentBalanceProduct = 0F;
                     } else {
@@ -1704,9 +1704,15 @@ public class APIOperations {
                 respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSymbol(), p.isIsPayTopUp()));
             }
             usuario.setRespuestaListadoProductos(respuestaListadoProductos);
+            if (usuario.getRemettencesDireccionId() != null) {
+                usuario.setRemettencesDireccionId(usuario.getRemettencesDireccionId());
+            } else {
+                usuario.setRemettencesDireccionId(BigInteger.ZERO);
+            }
 
             //Se le coloca 4 por que no tiene cuplimiento
             usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
+            
             return new RespuestaUsuario(CodigoRespuesta.PRIMER_INGRESO, CodigoRespuesta.PRIMER_INGRESO.name(), usuario);
         }
 
@@ -1753,14 +1759,19 @@ public class APIOperations {
             BalanceHistoryResponse balanceHistoryResponse = new BalanceHistoryResponse();
             Float currentBalanceProduct = 0F;
             try {
+                System.out.println("ENTRO15");
                 balanceHistoryResponse = alodigaWalletProxy.getBalanceHistoryByProductAndUser(Long.valueOf(usuario.getUsuarioId()), p.getId());
-                if (balanceHistoryResponse.getCodigoRespuesta().equals(Constante.NOT_BALANCE_HISTORY_AVAILABLE_CODE)) {
+                System.out.println("ENTRO16");
+                System.out.println("balanceHistoryResponse" + balanceHistoryResponse.getCodigoRespuesta());
+                
+                if (balanceHistoryResponse.getCodigoRespuesta().equals(Constante.NOT_BALANCE_HISTORY_AVAILABLE_CODE) || balanceHistoryResponse.getCodigoRespuesta().equals(Constante.CONNECT_TIMEOUT_EXCEPTION) || balanceHistoryResponse.getCodigoRespuesta().equals(Constante.SOCKECT_TIMEOUT_EXCEPTION) || balanceHistoryResponse.getCodigoRespuesta().equals(Constante.sERR_COD_99)) {
                     //No tiene producto asociado
                     currentBalanceProduct = 0F;
                 } else {
                     currentBalanceProduct = balanceHistoryResponse.getResponse().getCurrentAmount();
                 }
             } catch (RemoteException ex) {
+                ex.printStackTrace();
                 return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
             }
             respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSymbol(), p.isIsPayTopUp()));
@@ -1769,7 +1780,7 @@ public class APIOperations {
         APIAlodigaWalletProxy aPIAlodigaWalletProxy = new APIAlodigaWalletProxy();
         CumplimientResponse cumplimientResponse = new CumplimientResponse();
         try {
-            cumplimientResponse = aPIAlodigaWalletProxy.getCumplimientStatus(String.valueOf(usuario.getUsuarioId()));
+                cumplimientResponse = aPIAlodigaWalletProxy.getCumplimientStatus(String.valueOf(usuario.getUsuarioId()));
 
         } catch (RemoteException ex) {
             ex.printStackTrace();
@@ -2167,9 +2178,9 @@ public class APIOperations {
     public RespuestaCodigoRandom generarCodigoMovilSMS(String usuarioApi,
             String passwordApi, String movil) {
         if (validarUsuario(usuarioApi, passwordApi)) {
-            if (!isMovilUnique(movil)) {
-                return new RespuestaCodigoRandom(CodigoRespuesta.NUMERO_TELEFONO_YA_EXISTE);
-            }
+//            if (!isMovilUnique(movil)) {
+//                return new RespuestaCodigoRandom(CodigoRespuesta.NUMERO_TELEFONO_YA_EXISTE);
+//            }
 
             String codigo = "";
             try {
@@ -2179,7 +2190,12 @@ public class APIOperations {
                     codigo += "" + r.nextInt(10);
                     i++;
                 }
-                MovilCodigo mc = new MovilCodigo(movil, codigo);
+                MovilCodigo mc;
+                try {
+                mc = new MovilCodigo(movil, codigo);
+                } catch (NullPointerException e) {
+                    return new RespuestaCodigoRandom(CodigoRespuesta.USUARIO_NO_EXISTE);
+                }
                 SendSmsThread sendSmsThread = new SendSmsThread(movil, codigo, Integer.valueOf("2"));
                 sendSmsThread.start();
 
@@ -3426,9 +3442,7 @@ public class APIOperations {
             return new Respuesta(CodigoRespuesta.ERROR_CREDENCIALES);
         }
     }
-    
-    
-    
+
     public RespuestaUsuario actualizarUsuarioporId(String usuarioApi,
             String passwordApi, String usuarioId, Long remettencesDireccionId) {
         try {
