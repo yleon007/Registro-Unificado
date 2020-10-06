@@ -779,5 +779,14 @@ public class APIRegistroUnificado {
                 credencial);
     }
     
+    @WebMethod
+    public RespuestaUsuario actualizarUsuarioporId (
+            @WebParam(name = "usuarioApi") String usuarioApi,
+            @WebParam(name = "passwordApi") String passwordApi,
+            @WebParam(name = "usuarioId") String usuarioId,
+            @WebParam(name = "remettencesDireccionId") Long remettencesDireccionId) {
+        return operations.actualizarUsuarioporId(usuarioApi, passwordApi, usuarioId,remettencesDireccionId);
+    }
+    
     
 }
