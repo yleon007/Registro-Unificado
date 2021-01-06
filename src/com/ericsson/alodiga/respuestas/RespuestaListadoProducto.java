@@ -15,13 +15,15 @@ public class RespuestaListadoProducto {
     private String nombreProducto;
     private String simbolo;
     private Boolean isPayTopUP;
+    private Boolean isUsePrepaidCard;
 
-        public RespuestaListadoProducto(Long id, Float saldoActual, String nombreProducto,String simbolo,Boolean isPayTopUP) {
+        public RespuestaListadoProducto(Long id, Float saldoActual, String nombreProducto,String simbolo,Boolean isPayTopUP, Boolean isUsePrepaidCard ) {
         this.saldoActual = saldoActual;
         this.nombreProducto = nombreProducto;
         this.simbolo = simbolo;
         this.id = id;
         this.isPayTopUP = isPayTopUP;
+        this.isUsePrepaidCard = isUsePrepaidCard;
     }
 
 
@@ -65,6 +67,19 @@ public class RespuestaListadoProducto {
 
     public void setIsPayTopUP(Boolean isPayTopUP) {
         this.isPayTopUP = isPayTopUP;
+    }
+
+    public Boolean getIsUsePrepaidCard() {
+        return isUsePrepaidCard;
+    }
+
+    public void setIsUsePrepaidCard(Boolean isUsePrepaidCard) {
+        this.isUsePrepaidCard = isUsePrepaidCard;
+    }
+
+    @Override
+    public String toString() {
+        return "RespuestaListadoProducto{" + "id=" + id + ", saldoActual=" + saldoActual + ", nombreProducto=" + nombreProducto + ", simbolo=" + simbolo + ", isPayTopUP=" + isPayTopUP + ", isUsePrepaidCard=" + isUsePrepaidCard + '}';
     }
     
     

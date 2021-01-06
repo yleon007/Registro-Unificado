@@ -1,7 +1,6 @@
 package com.ericsson.alodiga.utils;
 
 
-import com.alodiga.wallet.ws.Transaction;
 import com.ericcson.alodiga.bean.APIOperations;
 import com.ericsson.alodiga.model.Cuenta;
 import java.awt.Color;

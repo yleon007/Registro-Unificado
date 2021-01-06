@@ -5,7 +5,7 @@
  */
 package com.ericsson.alodiga.utils;
 
-import com.alodiga.wallet.ws.Transaction;
+
 import com.ericsson.alodiga.model.Usuario;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +27,6 @@ public class SendMailTherad extends Thread {
     
     private String idioma;
     private Usuario usuario;
-    private Transaction transaction;
     private Float oldAmount;
     private Float currentAmount;
     private Integer sendType;

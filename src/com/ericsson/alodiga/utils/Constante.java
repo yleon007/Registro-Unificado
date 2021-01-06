@@ -152,6 +152,8 @@ public class Constante {
 
     public static final Long CREDENTIAL_PREPAY_CARD = 3L;
     //SIN VALIDAR USUARIO PRIMER INGRESO
-    public static final Long SIN_VALIDAR = 4L;
-
+    public static final Long SIN_VALIDAR = 0L;
+    
+    //RequestType
+    public static final Long REQUEST_TYPE = 2L;
 }

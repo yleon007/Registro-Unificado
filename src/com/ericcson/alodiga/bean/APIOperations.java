@@ -5,9 +5,11 @@ import com.alodiga.wallet.ws.APIAlodigaWalletProxy;
 import com.alodiga.wallet.ws.BalanceHistoryResponse;
 import com.alodiga.wallet.ws.CardResponse;
 import com.alodiga.wallet.ws.CumplimientResponse;
+import com.alodiga.wallet.ws.EmptyListException;
+import com.alodiga.wallet.ws.PersonResponse;
 import com.alodiga.wallet.ws.Product;
 import com.alodiga.wallet.ws.ProductListResponse;
-import com.alodiga.wallet.ws.Transaction;
+import com.alodiga.wallet.ws.StatusRequestResponse;
 import java.sql.Connection;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -120,9 +122,13 @@ import java.util.logging.Level;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionManagement;
 import javax.mail.MessagingException;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec;
 
 @Stateless(name = "FsProcessor", mappedName = "ejb/FsProcessor")
@@ -1701,7 +1707,7 @@ public class APIOperations {
                 } catch (RemoteException ex) {
                     return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
                 }
-                respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSymbol(), p.isIsPayTopUp()));
+                respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSymbol(), p.isIsPayTopUp(), p.isIsUsePrepaidCard()));
             }
             usuario.setRespuestaListadoProductos(respuestaListadoProductos);
             if (usuario.getRemettencesDireccionId() != null) {
@@ -1709,10 +1715,25 @@ public class APIOperations {
             } else {
                 usuario.setRemettencesDireccionId(BigInteger.ZERO);
             }
+            StatusRequestResponse statusRequestResponse = new StatusRequestResponse();
+            try {
+                //Se le coloca 4 por que no tiene cuplimiento
+                PersonResponse personResponse = alodigaWalletProxy.getPersonByEmail(usuario.getEmail());
+                statusRequestResponse = alodigaWalletProxy.getStatusAffiliationRequestByUser(personResponse.getPerson().getId(), Constante.REQUEST_TYPE);
 
-            //Se le coloca 4 por que no tiene cuplimiento
-            usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
-            
+            } catch (EmptyListException ex) {
+                ex.printStackTrace();
+                usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
+            } catch (RemoteException ex) {
+                ex.printStackTrace();
+                return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+            }
+            if (statusRequestResponse.getResponse() == null) {
+                usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
+            } else {
+                usuario.setCumplimient(statusRequestResponse.getResponse().getId().toString());
+            }
+
             return new RespuestaUsuario(CodigoRespuesta.PRIMER_INGRESO, CodigoRespuesta.PRIMER_INGRESO.name(), usuario);
         }
 
@@ -1763,7 +1784,7 @@ public class APIOperations {
                 balanceHistoryResponse = alodigaWalletProxy.getBalanceHistoryByProductAndUser(Long.valueOf(usuario.getUsuarioId()), p.getId());
                 System.out.println("ENTRO16");
                 System.out.println("balanceHistoryResponse" + balanceHistoryResponse.getCodigoRespuesta());
-                
+
                 if (balanceHistoryResponse.getCodigoRespuesta().equals(Constante.NOT_BALANCE_HISTORY_AVAILABLE_CODE) || balanceHistoryResponse.getCodigoRespuesta().equals(Constante.CONNECT_TIMEOUT_EXCEPTION) || balanceHistoryResponse.getCodigoRespuesta().equals(Constante.SOCKECT_TIMEOUT_EXCEPTION) || balanceHistoryResponse.getCodigoRespuesta().equals(Constante.sERR_COD_99)) {
                     //No tiene producto asociado
                     currentBalanceProduct = 0F;
@@ -1774,24 +1795,25 @@ public class APIOperations {
                 ex.printStackTrace();
                 return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
             }
-            respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSymbol(), p.isIsPayTopUp()));
+            respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSymbol(), p.isIsPayTopUp(), p.isIsUsePrepaidCard()));
         }
         usuario.setRespuestaListadoProductos(respuestaListadoProductos);
         APIAlodigaWalletProxy aPIAlodigaWalletProxy = new APIAlodigaWalletProxy();
-        CumplimientResponse cumplimientResponse = new CumplimientResponse();
+        StatusRequestResponse statusRequestResponse = new StatusRequestResponse();
         try {
-                cumplimientResponse = aPIAlodigaWalletProxy.getCumplimientStatus(String.valueOf(usuario.getUsuarioId()));
-
+            PersonResponse personResponse = alodigaWalletProxy.getPersonByEmail(usuario.getEmail());
+            statusRequestResponse = alodigaWalletProxy.getStatusAffiliationRequestByUser(personResponse.getPerson().getId(), Constante.REQUEST_TYPE);
+        } catch (EmptyListException ex) {
+            ex.printStackTrace();
+            usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
         } catch (RemoteException ex) {
             ex.printStackTrace();
             return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
         }
-
-        try {
-            usuario.setCumplimient(cumplimientResponse.getCumplimients().getComplientStatusId().getId().toString());
-        } catch (NullPointerException e) {
-            //No tiene cumplimineto aun
+        if (statusRequestResponse.getResponse() == null) {
             usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
+        } else {
+            usuario.setCumplimient(statusRequestResponse.getResponse().getId().toString());
         }
 
         try {
@@ -1804,8 +1826,9 @@ public class APIOperations {
 
             if (aPIAlodigaWalletProxy.hasPrepayCard(Long.valueOf(usuario.getUsuarioId()))) {
                 usuario.setPrepayCard(Constante.HAS_PREPAY_CARD);
-                CardResponse respuestaTarjeta = aPIAlodigaWalletProxy.getCardByUserId(String.valueOf(usuario.getUsuarioId()));
-                usuario.setNumberCard(respuestaTarjeta.getNumberCard());
+                CardResponse cardResponse = alodigaWalletProxy.getCardByEmail(usuario.getEmail());
+                String alias = cardResponse.getAliasCard();
+                usuario.setNumberCard(alias);
             } else {
                 usuario.setPrepayCard(Constante.NOT_HAS_PREPAY_CARD);
             }
@@ -2192,7 +2215,7 @@ public class APIOperations {
                 }
                 MovilCodigo mc;
                 try {
-                mc = new MovilCodigo(movil, codigo);
+                    mc = new MovilCodigo(movil, codigo);
                 } catch (NullPointerException e) {
                     return new RespuestaCodigoRandom(CodigoRespuesta.USUARIO_NO_EXISTE);
                 }
@@ -3210,7 +3233,7 @@ public class APIOperations {
                     } catch (RemoteException ex) {
                         return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
                     }
-                    respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSymbol(), p.isIsPayTopUp()));
+                    respuestaListadoProductos.add(new RespuestaListadoProducto(p.getId(), currentBalanceProduct, p.getName(), p.getSymbol(), p.isIsPayTopUp(), p.isIsUsePrepaidCard()));
                 }
                 usuario.setRespuestaListadoProductos(respuestaListadoProductos);
                 return new RespuestaUsuario(CodigoRespuesta.EXITO, CodigoRespuesta.EXITO.name(), usuario);
@@ -3236,11 +3259,6 @@ public class APIOperations {
         Cuenta cunCuenta = new Cuenta();
         cunCuenta.setNumeroCuenta("01050614154515461528");
         usuario.setCuenta(cunCuenta);
-        Transaction transaction = new Transaction();
-        transaction.setId(1412L);
-        transaction.getId();
-        transaction.getTotalAmount();
-        transaction.setTotalAmount(Float.valueOf("2"));
 
         Mail mail = Utils.enviarCorreRecuperarContraseñaAplicacionMovil("ES", usuario);
         System.out.println("body: " + mail.getBody());
