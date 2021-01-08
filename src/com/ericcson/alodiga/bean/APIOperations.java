@@ -1837,6 +1837,7 @@ public class APIOperations {
                     usuario.setPrepayCard(Constante.HAS_PREPAY_CARD);
                     usuario.setNumberCard(alias);
                     usuario.setCardHolder(cardHolder);
+                    
                 } else {
                     usuario.setPrepayCard(Constante.NOT_HAS_PREPAY_CARD);
                 }
