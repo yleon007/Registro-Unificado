@@ -140,6 +140,9 @@ public class Usuario implements Serializable {
     private String numberCard;
     
     @Transient
+    private String cardHolder;
+    
+    @Transient
     private int countrySourceId;
     // @XmlTransient
     // @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
@@ -528,13 +531,21 @@ public class Usuario implements Serializable {
     public void setNumberCard(String numberCard) {
         this.numberCard = numberCard;
     }
-
+    
     public int getCountrySourceId() {
         return countrySourceId;
     }
 
     public void setCountrySourceId(int countrySourceId) {
         this.countrySourceId = countrySourceId;
+    }
+
+    public String getCardHolder() {
+        return cardHolder;
+    }
+
+    public void setCardHolder(String cardHolder) {
+        this.cardHolder = cardHolder;
     }
 
 

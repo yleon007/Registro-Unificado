@@ -1823,12 +1823,17 @@ public class APIOperations {
             } else {
                 usuario.setPrepayCardAsociate(Constante.NOT_HAS_PREPAY_CARD_ASOCIATED);
             }
-
+            String alias = "";
+            String cardHolder = "";
             if (aPIAlodigaWalletProxy.hasPrepayCard(Long.valueOf(usuario.getUsuarioId()))) {
                 usuario.setPrepayCard(Constante.HAS_PREPAY_CARD);
                 CardResponse cardResponse = alodigaWalletProxy.getCardByEmail(usuario.getEmail());
-                String alias = cardResponse.getAliasCard();
+                if (cardResponse != null) {
+                    alias = cardResponse.getAliasCard();
+                    cardHolder = cardResponse.getCardHolder();
+                }
                 usuario.setNumberCard(alias);
+                usuario.setCardHolder(cardHolder);
             } else {
                 usuario.setPrepayCard(Constante.NOT_HAS_PREPAY_CARD);
             }
