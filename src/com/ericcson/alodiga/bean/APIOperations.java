@@ -1799,21 +1799,26 @@ public class APIOperations {
         }
         usuario.setRespuestaListadoProductos(respuestaListadoProductos);
         APIAlodigaWalletProxy aPIAlodigaWalletProxy = new APIAlodigaWalletProxy();
-        StatusRequestResponse statusRequestResponse = new StatusRequestResponse();
         try {
             PersonResponse personResponse = alodigaWalletProxy.getPersonByEmail(usuario.getEmail());
-            statusRequestResponse = alodigaWalletProxy.getStatusAffiliationRequestByUser(personResponse.getPerson().getId(), Constante.REQUEST_TYPE);
+            if (personResponse.getPerson() != null) {   
+                StatusRequestResponse statusRequestResponse = alodigaWalletProxy.getStatusAffiliationRequestByUser(personResponse.getPerson().getId(), Constante.REQUEST_TYPE);
+
+                if (statusRequestResponse.getResponse() == null) {
+                    usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
+                } else {
+                    usuario.setCumplimient(statusRequestResponse.getResponse().getId().toString());
+                }
+            } else {
+                usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
+            }
+
         } catch (EmptyListException ex) {
             ex.printStackTrace();
             usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
         } catch (RemoteException ex) {
             ex.printStackTrace();
             return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
-        }
-        if (statusRequestResponse.getResponse() == null) {
-            usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
-        } else {
-            usuario.setCumplimient(statusRequestResponse.getResponse().getId().toString());
         }
 
         try {
@@ -1823,17 +1828,18 @@ public class APIOperations {
             } else {
                 usuario.setPrepayCardAsociate(Constante.NOT_HAS_PREPAY_CARD_ASOCIATED);
             }
-            String alias = "";
-            String cardHolder = "";
+
             if (aPIAlodigaWalletProxy.hasPrepayCard(Long.valueOf(usuario.getUsuarioId()))) {
-                usuario.setPrepayCard(Constante.HAS_PREPAY_CARD);
                 CardResponse cardResponse = alodigaWalletProxy.getCardByEmail(usuario.getEmail());
-                if (cardResponse != null) {
-                    alias = cardResponse.getAliasCard();
-                    cardHolder = cardResponse.getCardHolder();
+                String alias = cardResponse.getAliasCard();
+                String cardHolder = cardResponse.getCardHolder();
+                if ((alias != null) && (!alias.isEmpty()) && (cardHolder != null) && (!cardHolder.isEmpty())) {
+                    usuario.setPrepayCard(Constante.HAS_PREPAY_CARD);
+                    usuario.setNumberCard(alias);
+                    usuario.setCardHolder(cardHolder);
+                } else {
+                    usuario.setPrepayCard(Constante.NOT_HAS_PREPAY_CARD);
                 }
-                usuario.setNumberCard(alias);
-                usuario.setCardHolder(cardHolder);
             } else {
                 usuario.setPrepayCard(Constante.NOT_HAS_PREPAY_CARD);
             }
