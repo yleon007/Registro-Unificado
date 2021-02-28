@@ -1693,7 +1693,25 @@ public class APIOperations {
                 return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
             }
             List<RespuestaListadoProducto> respuestaListadoProductos = new ArrayList<RespuestaListadoProducto>();
+            if (productListResponse == null || productListResponse.getProducts() == null) {
+                System.out.println("Usuario sin producto");
+                return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+            }
             for (Product p : productListResponse.getProducts()) {
+                if (p.getId() == 3) {
+                    try {
+                        if (alodigaWalletProxy.hasPrepayCard(Long.valueOf(usuario.getUsuarioId()))) {
+                            CardResponse cardResponse = alodigaWalletProxy.getCardByEmail(usuario.getEmail());
+                            String alias = cardResponse.getAliasCard();
+                            if (alias == null || alias.isEmpty()) {
+                                continue;
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        continue;
+                    }
+                }
                 BalanceHistoryResponse balanceHistoryResponse = new BalanceHistoryResponse();
                 Float currentBalanceProduct = 0F;
                 try {
@@ -1715,24 +1733,8 @@ public class APIOperations {
             } else {
                 usuario.setRemettencesDireccionId(BigInteger.ZERO);
             }
-            StatusRequestResponse statusRequestResponse = new StatusRequestResponse();
-            try {
-                //Se le coloca 4 por que no tiene cuplimiento
-                PersonResponse personResponse = alodigaWalletProxy.getPersonByEmail(usuario.getEmail());
-                statusRequestResponse = alodigaWalletProxy.getStatusAffiliationRequestByUser(personResponse.getPerson().getId(), Constante.REQUEST_TYPE);
-
-            } catch (EmptyListException ex) {
-                ex.printStackTrace();
-                usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
-            } catch (RemoteException ex) {
-                ex.printStackTrace();
-                return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
-            }
-            if (statusRequestResponse.getResponse() == null) {
-                usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
-            } else {
-                usuario.setCumplimient(statusRequestResponse.getResponse().getId().toString());
-            }
+            
+            usuario.setCumplimient("0");
 
             return new RespuestaUsuario(CodigoRespuesta.PRIMER_INGRESO, CodigoRespuesta.PRIMER_INGRESO.name(), usuario);
         }
@@ -1776,15 +1778,29 @@ public class APIOperations {
             return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
         }
         List<RespuestaListadoProducto> respuestaListadoProductos = new ArrayList<RespuestaListadoProducto>();
+        if (productListResponse == null || productListResponse.getProducts() == null) {
+            System.out.println("Usuario si producto");
+            return new RespuestaUsuario(CodigoRespuesta.ERROR_INTERNO);
+        }
         for (Product p : productListResponse.getProducts()) {
-            BalanceHistoryResponse balanceHistoryResponse = new BalanceHistoryResponse();
-            Float currentBalanceProduct = 0F;
+            if (p.getId() == 3) {
+                try {
+                    if (alodigaWalletProxy.hasPrepayCard(Long.valueOf(usuario.getUsuarioId()))) {
+                        CardResponse cardResponse = alodigaWalletProxy.getCardByEmail(usuario.getEmail());
+                        String alias = cardResponse.getAliasCard();
+                        if (alias == null || alias.isEmpty()) {
+                            continue;
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
+                }
+            }
+            BalanceHistoryResponse balanceHistoryResponse;
+            Float currentBalanceProduct;
             try {
-                System.out.println("ENTRO15");
                 balanceHistoryResponse = alodigaWalletProxy.getBalanceHistoryByProductAndUser(Long.valueOf(usuario.getUsuarioId()), p.getId());
-                System.out.println("ENTRO16");
-                System.out.println("balanceHistoryResponse" + balanceHistoryResponse.getCodigoRespuesta());
-
                 if (balanceHistoryResponse.getCodigoRespuesta().equals(Constante.NOT_BALANCE_HISTORY_AVAILABLE_CODE) || balanceHistoryResponse.getCodigoRespuesta().equals(Constante.CONNECT_TIMEOUT_EXCEPTION) || balanceHistoryResponse.getCodigoRespuesta().equals(Constante.SOCKECT_TIMEOUT_EXCEPTION) || balanceHistoryResponse.getCodigoRespuesta().equals(Constante.sERR_COD_99)) {
                     //No tiene producto asociado
                     currentBalanceProduct = 0F;
@@ -1801,7 +1817,7 @@ public class APIOperations {
         APIAlodigaWalletProxy aPIAlodigaWalletProxy = new APIAlodigaWalletProxy();
         try {
             PersonResponse personResponse = alodigaWalletProxy.getPersonByEmail(usuario.getEmail());
-            if (personResponse.getPerson() != null) {   
+            if (personResponse.getPerson() != null) {
                 StatusRequestResponse statusRequestResponse = alodigaWalletProxy.getStatusAffiliationRequestByUser(personResponse.getPerson().getId(), Constante.REQUEST_TYPE);
 
                 if (statusRequestResponse.getResponse() == null) {
@@ -1837,7 +1853,7 @@ public class APIOperations {
                     usuario.setPrepayCard(Constante.HAS_PREPAY_CARD);
                     usuario.setNumberCard(alias);
                     usuario.setCardHolder(cardHolder);
-                    
+
                 } else {
                     usuario.setPrepayCard(Constante.NOT_HAS_PREPAY_CARD);
                 }
