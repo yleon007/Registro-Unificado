@@ -37,15 +37,11 @@ import javax.net.ssl.SSLSession;
 @WebService
 public class APIRegistroUnificado {
 
-    
-    
     private static final Logger logger = Logger
             .getLogger(APIRegistroUnificado.class);
 
     @EJB
     private APIOperations operations;
-    
-   
 
     @WebMethod
     public RespuestaListadoAplicaciones getAplicaciones(
@@ -110,11 +106,11 @@ public class APIRegistroUnificado {
         return operations.guardarUsuario(usuarioApi, passwordApi, usuarioId,
                 nombre, apellido, credencial, email, movil, fechaNacimiento,
                 direccion, paisId, estadoId, ciudadId, condadoId, codigoPostal,
-                codigoValidacionMovil, nombreImagen, imagenBytes, link,false);
+                codigoValidacionMovil, nombreImagen, imagenBytes, link, false);
 
     }
-    
-   @WebMethod
+
+    @WebMethod
     public RespuestaGuardarUsuario guardarUsuarioAplicacionMovil(
             @WebParam(name = "usuarioApi") String usuarioApi,
             @WebParam(name = "passwordApi") String passwordApi,
@@ -135,15 +131,18 @@ public class APIRegistroUnificado {
             @WebParam(name = "nombreImagen") String nombreImagen,
             @WebParam(name = "imagenBytes") byte[] imagenBytes,
             @WebParam(name = "link") String link,
-            @WebParam(name = "pin") String pin) {
+            @WebParam(name = "pin") String pin,
+            @WebParam(name = "tipoDocumentoId") int tipoDocumentoId,
+            @WebParam(name = "numeroDocumento") String numeroDocumento) {
         logger.debug("guardar usuario");
 
         return operations.guardarUsuarioAplicacionMovil(usuarioApi, passwordApi, usuarioId,
                 nombre, apellido, credencial, email, movil, fechaNacimiento,
                 direccion, paisId, estadoId, ciudadId, condadoId, codigoPostal,
-                codigoValidacionMovil, nombreImagen, imagenBytes, link,pin,false);
+                codigoValidacionMovil, nombreImagen, imagenBytes, link, pin, false,
+                tipoDocumentoId, numeroDocumento);
 
-    } 
+    }
 
     @WebMethod
     public RespuestaGuardarUsuario guardarPerfilAloPos(
@@ -387,8 +386,7 @@ public class APIRegistroUnificado {
         return operations.login(usuarioApi, passwordApi, email, movil,
                 credencial, ip);
     }
-    
-    
+
     public RespuestaUsuario loginAplicacionMovil(
             @WebParam(name = "usuarioApi") String usuarioApi,
             @WebParam(name = "passwordApi") String passwordApi,
@@ -428,8 +426,7 @@ public class APIRegistroUnificado {
         return operations.setPreguntasSecretasUsuario(usuarioId,
                 preguntasSecretas);
     }
-    
-    
+
     @WebMethod
     public Respuesta setPreguntasSecretasUsuarioAplicacionMovil(
             @WebParam(name = "usuarioApi") String usuarioApi,
@@ -441,10 +438,9 @@ public class APIRegistroUnificado {
             @WebParam(name = "repuestaId2") String repuestaId2,
             @WebParam(name = "preguntaId3") String preguntaId3,
             @WebParam(name = "repuestaId3") String repuestaId3) {
-        return operations.setPreguntasSecretasUsuarioAplicacionMovil(usuarioApi, passwordApi, usuarioId, preguntaId1, repuestaId1, 
-        preguntaId2, repuestaId2, preguntaId3, repuestaId3);
+        return operations.setPreguntasSecretasUsuarioAplicacionMovil(usuarioApi, passwordApi, usuarioId, preguntaId1, repuestaId1,
+                preguntaId2, repuestaId2, preguntaId3, repuestaId3);
     }
-    
 
     @WebMethod
     public Respuesta recuperarCredencial(
@@ -483,18 +479,16 @@ public class APIRegistroUnificado {
             @WebParam(name = "movil") String movil) {
         return operations.generarCodigoMovilSMS(usuarioApi, passwordApi, movil);
     }
-    
+
     @WebMethod
     public RespuestaCodigoRandom generarCodigoMovilSMSAplicacionMovil(
             @WebParam(name = "usuarioApi") String usuarioApi,
             @WebParam(name = "passwordApi") String passwordApi,
-            @WebParam(name = "movil") String movil, 
+            @WebParam(name = "movil") String movil,
             @WebParam(name = "email") String email) {
-        return operations.generarCodigoMovilSMSAplicacionMovil(usuarioApi, passwordApi, movil,email);
+        return operations.generarCodigoMovilSMSAplicacionMovil(usuarioApi, passwordApi, movil, email);
     }
-    
-    
-    
+
     @WebMethod
     public Respuesta validarExisteNumero(
             @WebParam(name = "usuarioApi") String usuarioApi,
@@ -671,8 +665,9 @@ public class APIRegistroUnificado {
         return operations.recuperarPassword(usuarioApi, passwordApi, idioma,
                 email, clente);
     }
-        @WebMethod
-        public RespuestaNuevoToken loginSocialNetwork(
+
+    @WebMethod
+    public RespuestaNuevoToken loginSocialNetwork(
             @WebParam(name = "usuarioApi") String usuarioApi,
             @WebParam(name = "passwordApi") String passwordApi,
             @WebParam(name = "email") String email,
@@ -681,7 +676,6 @@ public class APIRegistroUnificado {
         return operations.loginSocialNetwork(usuarioApi, passwordApi, email, movil, ip);
     }
 
-        
     @WebMethod
     public RespuestaGuardarUsuario guardarUsuarioSocialNetwork(
             @WebParam(name = "usuarioApi") String usuarioApi,
@@ -691,74 +685,68 @@ public class APIRegistroUnificado {
             @WebParam(name = "apellido") String apellido,
             @WebParam(name = "email") String email,
             @WebParam(name = "movil") String movil,
-            @WebParam(name = "codigoValidacionMovil") String codigoValidacionMovil){
-         byte [] b = new byte[0];
-        
-         
-         return operations.guardarUsuario(usuarioApi, passwordApi, null,
+            @WebParam(name = "codigoValidacionMovil") String codigoValidacionMovil) {
+        byte[] b = new byte[0];
+
+        return operations.guardarUsuario(usuarioApi, passwordApi, null,
                 nombre, apellido, "Alo123+", email, movil, "01-08-1975",
                 "", "1", "", "", "", "",
-                codigoValidacionMovil, null,b,"http://llamadas.alodiga.com/site/welcome",true);
+                codigoValidacionMovil, null, b, "http://llamadas.alodiga.com/site/welcome", true);
 
     }
-    
-        @WebMethod
+
+    @WebMethod
     public RespuestaUsuario validarPin(
             @WebParam(name = "usuarioApi") String usuarioApi,
             @WebParam(name = "passwordApi") String passwordApi,
             @WebParam(name = "usuarioId") Integer usuarioId,
             @WebParam(name = "pin") String pin) {
-        return operations.validarPin(usuarioApi, passwordApi, usuarioId,pin);
+        return operations.validarPin(usuarioApi, passwordApi, usuarioId, pin);
     }
-    
-    
+
     @WebMethod
     public String testEcnript(
             @WebParam(name = "usuarioApi") String usuarioApi,
             @WebParam(name = "passwordApi") String passwordApi,
             @WebParam(name = "textValue") String textValue) {
-        return operations.testEncript(usuarioApi, passwordApi,textValue);
+        return operations.testEncript(usuarioApi, passwordApi, textValue);
     }
-    
+
     @WebMethod
     public String testDesEcnript(
             @WebParam(name = "usuarioApi") String usuarioApi,
             @WebParam(name = "passwordApi") String passwordApi,
             @WebParam(name = "textValue") String textValue) {
-        return operations.testDesencript(usuarioApi, passwordApi,textValue);
+        return operations.testDesencript(usuarioApi, passwordApi, textValue);
     }
-    
-     @WebMethod
+
+    @WebMethod
     public RespuestaUsuario listadoProductosPorUsuario(
             @WebParam(name = "usuarioApi") String usuarioApi,
             @WebParam(name = "passwordApi") String passwordApi,
             @WebParam(name = "usuarioId") Integer usuarioId) {
-        return operations.listadoProductosPorUsuario(usuarioApi, passwordApi,usuarioId);
+        return operations.listadoProductosPorUsuario(usuarioApi, passwordApi, usuarioId);
     }
-    
+
     @WebMethod
-    public void sendMailTest()
-            {
-         operations.sendmailTest();
+    public void sendMailTest() {
+        operations.sendmailTest();
     }
-    
+
     @WebMethod
-    public void sendSmsTest()
-            {
-         operations.sendSmsTest();
+    public void sendSmsTest() {
+        operations.sendSmsTest();
     }
-    
+
     @WebMethod
     public Respuesta sendSmsSimbox(
-            
             @WebParam(name = "usuarioApi") String usuarioApi,
             @WebParam(name = "passwordApi") String passwordApi,
             @WebParam(name = "number") String number,
-            @WebParam(name = "text") String text){
+            @WebParam(name = "text") String text) {
         return operations.sendSmsSimbox(usuarioApi, passwordApi, number, text);
     }
-    
-    
+
     @WebMethod
     public Respuesta cambiarCredencialAplicacionMovil(
             @WebParam(name = "usuarioApi") String usuarioApi,
@@ -768,7 +756,7 @@ public class APIRegistroUnificado {
         return operations.cambiarCredencialAplicacionMovil(usuarioApi, passwordApi, usuarioId,
                 credencial);
     }
-    
+
     @WebMethod
     public Respuesta cambiarCredencialAplicacionMovilEmailOrPhone(
             @WebParam(name = "usuarioApi") String usuarioApi,
@@ -778,15 +766,14 @@ public class APIRegistroUnificado {
         return operations.cambiarCredencialAplicacionMovilEmailOrPhone(usuarioApi, passwordApi, phoneOrEmail,
                 credencial);
     }
-    
+
     @WebMethod
-    public RespuestaUsuario actualizarUsuarioporId (
+    public RespuestaUsuario actualizarUsuarioporId(
             @WebParam(name = "usuarioApi") String usuarioApi,
             @WebParam(name = "passwordApi") String passwordApi,
             @WebParam(name = "usuarioId") String usuarioId,
             @WebParam(name = "remettencesDireccionId") Long remettencesDireccionId) {
-        return operations.actualizarUsuarioporId(usuarioApi, passwordApi, usuarioId,remettencesDireccionId);
+        return operations.actualizarUsuarioporId(usuarioApi, passwordApi, usuarioId, remettencesDireccionId);
     }
-    
-    
+
 }

@@ -446,7 +446,8 @@ public class APIOperations {
             String fechaNacimiento, String direccion, String paisId,
             String estadoId, String ciudadId, String condadoId,
             String codigoPostal, String codigoValidacionMovil,
-            String nombreImagen, byte[] imagenBytes, String link, String pin, boolean isSocialNetwork) {
+            String nombreImagen, byte[] imagenBytes, String link, String pin, boolean isSocialNetwork,
+            int tipoDocumentoId, String numeroDocumento) {
         link = "http://llamadas.alodiga.com/site/welcome";
         try {
             if (validarUsuario(usuarioApi, passwordApi)) {
@@ -485,6 +486,7 @@ public class APIOperations {
                     Estado estado1 = getEstadoPorDescripcion(Estado.ACTIVO);
                     usuario.setEstado(estado1);
                     usuario.setIntentosFallidos(0);
+
                     if (!isEmailUnique(email)) {
                         return new RespuestaGuardarUsuario(
                                 CodigoRespuesta.CORREO_YA_EXISTE);
@@ -603,6 +605,11 @@ public class APIOperations {
                 usuario.setCredencialFecha(new Date());
                 String value = S3cur1ty3Cryt3r.aloEncrpter(pin, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
                 usuario.setPin(Utils.MD5(value));
+                
+                TipoDocumento tipoDocumento = entityManager.find(TipoDocumento.class, tipoDocumentoId);
+                usuario.setTipoDocumento(tipoDocumento);
+                usuario.setNumeroDocumento(numeroDocumento);
+                
                 logger.debug("usuario: --->" + usuario);
                 logger.debug("direccion1: --->" + direccion1);
                 logger.debug("cuenta: --->" + cuenta);
@@ -1733,7 +1740,7 @@ public class APIOperations {
             } else {
                 usuario.setRemettencesDireccionId(BigInteger.ZERO);
             }
-            
+
             usuario.setCumplimient("0");
 
             return new RespuestaUsuario(CodigoRespuesta.PRIMER_INGRESO, CodigoRespuesta.PRIMER_INGRESO.name(), usuario);
@@ -1816,18 +1823,19 @@ public class APIOperations {
         usuario.setRespuestaListadoProductos(respuestaListadoProductos);
         APIAlodigaWalletProxy aPIAlodigaWalletProxy = new APIAlodigaWalletProxy();
         try {
-            PersonResponse personResponse = alodigaWalletProxy.getPersonByEmail(usuario.getEmail());
-            if (personResponse.getPerson() != null) {
-                StatusRequestResponse statusRequestResponse = alodigaWalletProxy.getStatusAffiliationRequestByUser(personResponse.getPerson().getId(), Constante.REQUEST_TYPE);
+            //PersonResponse personResponse = alodigaWalletProxy.getPersonByEmail(usuario.getEmail());
+            //if (personResponse.getPerson() != null) {
+            //StatusRequestResponse statusRequestResponse = alodigaWalletProxy.getStatusAffiliationRequestByUser(personResponse.getPerson().getId(), Constante.REQUEST_TYPE);
+            StatusRequestResponse statusRequestResponse = alodigaWalletProxy.getStatusAffiliationRequestByUser((long) usuario.getUsuarioId(), Constante.REQUEST_TYPE);
 
-                if (statusRequestResponse.getResponse() == null) {
-                    usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
-                } else {
-                    usuario.setCumplimient(statusRequestResponse.getResponse().getId().toString());
-                }
-            } else {
+            if (statusRequestResponse.getResponse() == null) {
                 usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
+            } else {
+                usuario.setCumplimient(statusRequestResponse.getResponse().getId().toString());
             }
+            //} else {
+            //  usuario.setCumplimient(String.valueOf(Constante.SIN_VALIDAR));
+            //}
 
         } catch (EmptyListException ex) {
             ex.printStackTrace();
