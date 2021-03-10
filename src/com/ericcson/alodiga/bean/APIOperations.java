@@ -564,7 +564,7 @@ public class APIOperations {
                             CodigoRespuesta.DATOS_INVALIDOS, "PAIS_NULO");
                 }
                 logger.debug("saving user " + usuario.getNombre());
-                usuario.setApellido(apellido + " " + apellido);
+                usuario.setApellido(apellido);
                 direccion1.setCiudadId(!StringUtils.isEmpty(ciudadId) ? Integer
                         .parseInt(ciudadId) : 0);
                 direccion1
@@ -599,7 +599,7 @@ public class APIOperations {
                     usuario.setFechaNacimiento(date);
                 }
                 usuario.setMovil(movil);
-                usuario.setNombre(nombre + " " + nombre);
+                usuario.setNombre(nombre);
                 String valueCredencial = S3cur1ty3Cryt3r.aloEncrpter(credencial, "1nt3r4xt3l3ph0ny", null, "DESede", "0123456789ABCDEF");
                 usuario.setCredencial(Utils.MD5(valueCredencial));
                 usuario.setCredencialFecha(new Date());
