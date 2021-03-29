@@ -16,7 +16,8 @@ public class RespuestaListadoProducto {
     private String simbolo;
     private Boolean isPayTopUP;
     private Boolean isUsePrepaidCard;
-
+    
+    
         public RespuestaListadoProducto(Long id, Float saldoActual, String nombreProducto,String simbolo,Boolean isPayTopUP, Boolean isUsePrepaidCard ) {
         this.saldoActual = saldoActual;
         this.nombreProducto = nombreProducto;
@@ -24,6 +25,7 @@ public class RespuestaListadoProducto {
         this.id = id;
         this.isPayTopUP = isPayTopUP;
         this.isUsePrepaidCard = isUsePrepaidCard;
+    
     }
 
 
