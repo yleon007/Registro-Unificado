@@ -2,6 +2,8 @@ package com.ericsson.alodiga.utils;
 
 
 import com.ericcson.alodiga.bean.APIOperations;
+import com.ericsson.alodiga.model.Accion;
+import com.ericsson.alodiga.model.Bitacora;
 import com.ericsson.alodiga.model.Cuenta;
 import java.awt.Color;
 import java.awt.Font;
@@ -20,11 +22,13 @@ import javax.xml.rpc.ServiceException;
 import org.apache.log4j.Logger;
 
 import com.ericsson.alodiga.model.Direccion;
+import com.ericsson.alodiga.model.Estado;
 import com.ericsson.alodiga.model.Ocupacion;
 import com.ericsson.alodiga.model.TipoDocumento;
 import com.ericsson.alodiga.model.Usuario;
 import com.ericsson.alodiga.respuestas.CodigoRespuesta;
 import com.ericsson.alodiga.respuestas.Respuesta;
+import com.ericsson.alodiga.respuestas.RespuestaUsuario;
 import com.icon.mw.ws.AloDiga;
 import com.icon.mw.ws.AloDigaServiceLocator;
 import com.lexisnexis.bridgerinsight.BridgerInsight_Web_Services_Interfaces_9_0.AdditionalInfoType;
@@ -63,6 +67,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
+import javax.persistence.EntityManager;
 
 public class Utils {
     
@@ -946,6 +951,9 @@ public class Utils {
         }
    
     }
+    
+    
+    
 
 
             

@@ -77,6 +77,17 @@ public class SendSmsThread extends Thread {
                 //lo envia por TWILIO A MEXICO
                 TwilioSmsSenderProxy proxy = new TwilioSmsSenderProxy();
                 proxy.sendTwilioSMS(movil, message);
+            }else{
+                //Venezuela  integras con simbox
+                //APIOperations aPIOperations = new APIOperations();
+                SendSmsMassiva sendSmsMassiva = new SendSmsMassiva();
+                try {
+                    //aPIOperations.sendSmsSimbox(Constante.USER_API, Constante.PASSWORD_API, message, movil);
+                    sendSmsMassiva.sendSmsMassiva(message, movil);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         } catch (RemoteException ex) {
             ex.printStackTrace();
